@@ -5,7 +5,9 @@
 #include "CarriageController.h"
 
 void setup() {
+    HumanInterface::begin();
 }
 
 void loop() {
+    HumanInterface::update();
 }
