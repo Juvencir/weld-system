@@ -46,6 +46,23 @@ void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
     }
   }
 
+  if (&button == &leftButton) {
+    if (event == BUTTON_EVENT_PRESS) {
+      // Move para a esquerda
+    }
+    if (event == BUTTON_EVENT_RELEASE) {
+      // Para o movimento
+    }
+  }
+  if (&button == &rightButton) {
+    if (event == BUTTON_EVENT_PRESS) {
+      // Move para a direita
+    }
+    if (event == BUTTON_EVENT_RELEASE) {
+      // Para o movimento
+    }
+  }
+
   if (event == BUTTON_EVENT_RELEASE) {
     _activeButton = nullptr;
   }

@@ -15,18 +15,18 @@ class Button {
  private:
   uint8_t pin;
   bool confirmedState = true;
-  bool lastReadState = true;
   bool longPressState = false;
-  unsigned long lastDebounceTime = 0;
   unsigned long pressStartTime = 0;
+  bool lastReadState = true;
+  unsigned long lastDebounceTime = 0;
   void (*onEvent)(ButtonEvent) = nullptr;
 
  public:
   explicit Button(uint8_t pin);
-  void setCallback(void (*callback)(ButtonEvent));
   void begin();
   void update();
   bool isPressed();
   bool isLongPressed();
   unsigned long getPressDuration();
+  void setCallback(void (*callback)(ButtonEvent));
 };
