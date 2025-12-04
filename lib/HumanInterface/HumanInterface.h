@@ -11,12 +11,12 @@
 
 class HumanInterface {
  private:
+  static Button* _activeButton;
   static Button leftButton;
   static Button middleButton;
   static Button rightButton;
   static bool welderState;
-  static void middleButtonReleaseHandler();
-  static void middleButtonLongPressHandler();
+  static void buttonEventHandler(ButtonEvent event, Button& button);
  
  public:
   static void begin();

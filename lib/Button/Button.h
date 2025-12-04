@@ -5,6 +5,12 @@
 #define BUTTON_DEFAULT_DEBOUNCE_DELAY 50
 #define BUTTON_LONG_PRESS_DELAY 1000
 
+enum ButtonEvent {
+  BUTTON_EVENT_PRESS,
+  BUTTON_EVENT_RELEASE,
+  BUTTON_EVENT_LONG_PRESS
+};
+
 class Button {
  private:
   uint8_t pin;
@@ -13,16 +19,11 @@ class Button {
   bool longPressState = false;
   unsigned long lastDebounceTime = 0;
   unsigned long pressStartTime = 0;
-  void (*onPress)() = nullptr;
-  void (*onRelease)() = nullptr;
-  void (*onLongPress)() = nullptr;
+  void (*onEvent)(ButtonEvent) = nullptr;
 
  public:
-  Button(uint8_t pin);
-  void setCallbacks(
-      void (*onPress)(),
-      void (*onRelease)(),
-      void (*onLongPress)());
+  explicit Button(uint8_t pin);
+  void setCallback(void (*callback)(ButtonEvent));
   void begin();
   void update();
   bool isPressed();

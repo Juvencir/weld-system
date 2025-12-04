@@ -20,16 +20,16 @@ void Button::update() {
       confirmedState = currentState;
       if (!confirmedState) {
         pressStartTime = millis();
-        if (onPress) onPress();
+        if (onEvent) onEvent(BUTTON_EVENT_PRESS);
       } else {
-        if (onRelease) onRelease();
+        if (onEvent) onEvent(BUTTON_EVENT_RELEASE);
         longPressState = false;
       }
     }
   }
-  if (!confirmedState && onLongPress && !longPressState) {
+  if (!confirmedState && onEvent && !longPressState) {
     if (millis() - pressStartTime > BUTTON_LONG_PRESS_DELAY) {
-      onLongPress();
+      onEvent(BUTTON_EVENT_LONG_PRESS);
       longPressState = true;
     }
   }
@@ -49,9 +49,6 @@ bool Button::isLongPressed() {
   return !confirmedState && longPressState;
 }
 
-void Button::setCallbacks(void (*onPress)(), void (*onRelease)(),
-                          void (*onLongPress)()) {
-  this->onPress = onPress;
-  this->onRelease = onRelease;
-  this->onLongPress = onLongPress;
+void Button::setCallback(void (*callback)(ButtonEvent)) {
+  this->onEvent = callback;
 }

@@ -3,31 +3,51 @@
 Button HumanInterface::leftButton(LEFT_BUTTON_PIN);
 Button HumanInterface::middleButton(MIDDLE_BUTTON_PIN);
 Button HumanInterface::rightButton(RIGHT_BUTTON_PIN);
-
+Button* HumanInterface::_activeButton = nullptr;
 bool HumanInterface::welderState = false;
 
 void HumanInterface::begin() {
   pinMode(LED_PIN, OUTPUT);
   setWelderState(false);
-  middleButton.setCallbacks(
-      nullptr, []() { HumanInterface::middleButtonReleaseHandler(); }, []() { HumanInterface::middleButtonLongPressHandler(); });
+  leftButton.setCallback(
+      [](ButtonEvent event) { buttonEventHandler(event, leftButton); });
+  middleButton.setCallback(
+      [](ButtonEvent event) { buttonEventHandler(event, middleButton); });
+  rightButton.setCallback(
+      [](ButtonEvent event) { buttonEventHandler(event, rightButton); });
   leftButton.begin();
   middleButton.begin();
   rightButton.begin();
 }
 
-void HumanInterface::middleButtonReleaseHandler() {
-  if(middleButton.isLongPressed()) {
-    // Para a solda
+void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
+  if (_activeButton != nullptr && _activeButton != &button) {
     return;
   }
-  if (!leftButton.isPressed() && !rightButton.isPressed()) {
-    toggleWelderState();
+
+  if (_activeButton == nullptr) {
+    if (event == BUTTON_EVENT_PRESS) {
+      _activeButton = &button;
+    } else {
+      return;
+    }
   }
-}
-void HumanInterface::middleButtonLongPressHandler() {
-  if (!leftButton.isPressed() && !rightButton.isPressed()) {
-    // Inicia a solda sem mover o carrinho
+
+  if (&button == &middleButton) {
+    if (event == BUTTON_EVENT_LONG_PRESS) {
+      // Inicia a solda
+    }
+    if (event == BUTTON_EVENT_RELEASE) {
+      if (middleButton.isLongPressed()) {
+        // Para a solda
+      } else {
+        toggleWelderState();
+      }
+    }
+  }
+
+  if (event == BUTTON_EVENT_RELEASE) {
+    _activeButton = nullptr;
   }
 }
 
