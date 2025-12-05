@@ -1,23 +1,23 @@
 #include "HumanInterface.h"
 
-Button HumanInterface::leftButton(LEFT_BUTTON_PIN);
-Button HumanInterface::middleButton(MIDDLE_BUTTON_PIN);
-Button HumanInterface::rightButton(RIGHT_BUTTON_PIN);
+Button HumanInterface::topButton(TOP_BUTTON_PIN);
+Button HumanInterface::midButton(MID_BUTTON_PIN);
+Button HumanInterface::botButton(BOT_BUTTON_PIN);
 Button* HumanInterface::_activeButton = nullptr;
 bool HumanInterface::welderState = false;
 
 void HumanInterface::begin() {
   pinMode(LED_PIN, OUTPUT);
   setWelderState(false);
-  leftButton.setCallback(
-      [](ButtonEvent event) { buttonEventHandler(event, leftButton); });
-  middleButton.setCallback(
-      [](ButtonEvent event) { buttonEventHandler(event, middleButton); });
-  rightButton.setCallback(
-      [](ButtonEvent event) { buttonEventHandler(event, rightButton); });
-  leftButton.begin();
-  middleButton.begin();
-  rightButton.begin();
+  topButton.setCallback(
+      [](ButtonEvent event) { buttonEventHandler(event, topButton); });
+  midButton.setCallback(
+      [](ButtonEvent event) { buttonEventHandler(event, midButton); });
+  botButton.setCallback(
+      [](ButtonEvent event) { buttonEventHandler(event, botButton); });
+  topButton.begin();
+  midButton.begin();
+  botButton.begin();
 }
 
 void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
@@ -33,12 +33,12 @@ void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
     }
   }
 
-  if (&button == &middleButton) {
+  if (&button == &midButton) {
     if (event == BUTTON_EVENT_LONG_PRESS) {
       // Inicia a solda
     }
     if (event == BUTTON_EVENT_RELEASE) {
-      if (middleButton.isLongPressed()) {
+      if (midButton.isLongPressed()) {
         // Para a solda
       } else {
         toggleWelderState();
@@ -46,7 +46,7 @@ void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
     }
   }
 
-  if (&button == &leftButton) {
+  if (&button == &topButton) {
     if (event == BUTTON_EVENT_PRESS) {
       // Move para a esquerda
     }
@@ -54,7 +54,7 @@ void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
       // Para o movimento
     }
   }
-  if (&button == &rightButton) {
+  if (&button == &botButton) {
     if (event == BUTTON_EVENT_PRESS) {
       // Move para a direita
     }
@@ -69,9 +69,9 @@ void HumanInterface::buttonEventHandler(ButtonEvent event, Button& button) {
 }
 
 void HumanInterface::update() {
-  leftButton.update();
-  middleButton.update();
-  rightButton.update();
+  topButton.update();
+  midButton.update();
+  botButton.update();
 }
 
 void HumanInterface::setWelderState(bool state) {

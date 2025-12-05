@@ -4,17 +4,17 @@
 
 #include "Button.h"
 
-#define LEFT_BUTTON_PIN 2
-#define MIDDLE_BUTTON_PIN 3
-#define RIGHT_BUTTON_PIN 4
+#define TOP_BUTTON_PIN 2
+#define MID_BUTTON_PIN 3
+#define BOT_BUTTON_PIN 4
 #define LED_PIN 13
 
 class HumanInterface {
  private:
   static Button* _activeButton;
-  static Button leftButton;
-  static Button middleButton;
-  static Button rightButton;
+  static Button topButton;
+  static Button midButton;
+  static Button botButton;
   static bool welderState;
   static void buttonEventHandler(ButtonEvent event, Button& button);
  

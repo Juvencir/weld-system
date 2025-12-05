@@ -22,7 +22,7 @@ class Button {
   void (*onEvent)(ButtonEvent) = nullptr;
 
  public:
-  explicit Button(uint8_t pin);
+  explicit Button(uint8_t pin) : pin(pin) {}
   void begin();
   void update();
   bool isPressed();
