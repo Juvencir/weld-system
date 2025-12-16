@@ -12,7 +12,6 @@ class BypassPin {
   unsigned long lastHighTime = 0;
   void (*onStall)() = nullptr;
   void checkStall();
-  void end();
 
  public:
   explicit BypassPin(uint8_t pin, void (*onStall)() = nullptr)
@@ -22,4 +21,5 @@ class BypassPin {
   bool isStalled() const { return stalled; }
   bool getState() const { return state; }
   void setState(bool state);
+  void end();
 };
