@@ -1,13 +1,5 @@
 #include "CarriageController.h"
 
-void (*CarriageController::onStall)() = CarriageController::stop;
-
-BypassPin CarriageController::startPin(START_PIN, onStall);
-BypassPin CarriageController::stopPin(STOP_PIN, onStall);
-BypassPin CarriageController::dirPin(DIR_PIN, onStall);
-enum CarriageState CarriageController::state = IDLE;
-unsigned long CarriageController::lastStateChangeTime = 0;
-
 void CarriageController::begin() {
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, LOW);
@@ -42,12 +34,12 @@ void CarriageController::update() {
   }
 }
 
-void CarriageController::setState(CarriageState newState) {
+void CarriageController::setState(State newState) {
   state = newState;
   lastStateChangeTime = millis();
 }
 
-void CarriageController::stop() {
+void CarriageController::stop(BypassPin& pin) {
   digitalWrite(RELAY_PIN, HIGH);
 
   startPin.end();

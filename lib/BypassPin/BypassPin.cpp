@@ -16,7 +16,7 @@ void BypassPin::checkStall() {
   if (isStalled()) return;
 
   if (state == HIGH && digitalRead(pin) == LOW) {
-    unsigned long currentTime = millis();
+    uint32_t currentTime = millis();
     if (currentTime - lastHighTime > BYPASS_PIN_STALL_THRESHOLD) {
       end();
     }
@@ -26,7 +26,7 @@ void BypassPin::checkStall() {
 void BypassPin::end() {
   stalled = true;
   pinMode(pin, INPUT);
-  if (onStall) onStall();
+  if (onStall) onStall(*this);
 }
 
 void BypassPin::setState(bool state) {
