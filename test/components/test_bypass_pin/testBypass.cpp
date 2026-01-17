@@ -2,7 +2,6 @@
 #include <unity.h>
 
 #include "BypassPin.h"
-#include "MockBypass.cpp"
 
 #define BYPASS_PIN 4
 
@@ -13,7 +12,7 @@
  * TESTE DA LIB BYPASSPIN COM INTERAÇÃO DE HARDWARE SIMULADA:
  *
  * Testa funcionalidades da classe BypassPin utilizando hardware simulado pelo
- * próprio MCU por meio do MockBypass.
+ * próprio MCU por meio de um mock do comportamento do tartilope.
  *
  * [BYPASS_PIN] <---[ R1 ]---+---> [MOCK_SWITCH_PIN]
  *                           |
@@ -27,8 +26,18 @@
 
 BypassPin pin = BypassPin(BYPASS_PIN);
 
+void setupMockBypassPin() {
+  pinMode(MOCK_INPUT_PIN, INPUT_PULLUP);
+  pinMode(MOCK_SWITCH_PIN, OUTPUT_OPEN_DRAIN);
+  digitalWrite(MOCK_SWITCH_PIN, HIGH);
+}
+
+void setMockSwitchState(bool state) { digitalWrite(MOCK_SWITCH_PIN, state); }
+
+bool readMockInput() { return digitalRead(MOCK_INPUT_PIN); }
+
 void setUp() {
-  setupMockBypassPin(MOCK_SWITCH_PIN, MOCK_INPUT_PIN);
+  setupMockBypassPin();
   pin.begin();
   delay(100);
   pin.update();
