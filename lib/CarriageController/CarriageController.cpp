@@ -1,68 +1,66 @@
 #include "CarriageController.h"
 
 void CarriageController::begin() {
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
-  startPin.begin();
-  stopPin.begin();
-  dirPin.begin();
-  state = IDLE;
+    pinMode(RELAY_PIN, OUTPUT);
+    digitalWrite(RELAY_PIN, LOW);
+    startPin.begin();
+    stopPin.begin();
+    dirPin.begin();
+    state = IDLE;
 }
 
 void CarriageController::update() {
-  startPin.update();
-  stopPin.update();
-  dirPin.update();
+    startPin.update();
+    stopPin.update();
+    dirPin.update();
 
-  if (state != IDLE && state != MOVING) {
-    unsigned long currentTime = millis();
-    if (currentTime - lastStateChangeTime >= STATE_CHANGE_DELAY) {
-      switch (state) {
-        case STARTING:
-          startPin.setState(HIGH);
-          state = MOVING;
-          break;
-        case STOPPING:
-          stopPin.setState(HIGH);
-          state = IDLE;
-          break;
-        case CHANGING_DIRECTION:
-          setState(STARTING);
-          break;
-      }
+    if (state != IDLE && state != MOVING) {
+        unsigned long currentTime = millis();
+        if (currentTime - lastStateChangeTime >= STATE_CHANGE_DELAY) {
+            switch (state) {
+                case STARTING:
+                    startPin.setState(HIGH);
+                    state = MOVING;
+                    break;
+                case STOPPING:
+                    stopPin.setState(HIGH);
+                    state = IDLE;
+                    break;
+                case CHANGING_DIRECTION:
+                    setState(STARTING);
+                    break;
+            }
+        }
     }
-  }
 }
 
 void CarriageController::setState(State newState) {
-  state = newState;
-  lastStateChangeTime = millis();
+    state = newState;
+    lastStateChangeTime = millis();
 }
 
 void CarriageController::stop(BypassPin& pin) {
-  digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(RELAY_PIN, HIGH);
 
-  startPin.end();
-  stopPin.end();
-  dirPin.end();
+    startPin.end();
+    stopPin.end();
+    dirPin.end();
 }
 
-bool CarriageController::isStalled() {
-  return startPin.isStalled() || stopPin.isStalled() || dirPin.isStalled();
-}
+bool CarriageController::isStalled() { return startPin.isStalled() || stopPin.isStalled() || dirPin.isStalled(); }
 
 void CarriageController::startMovement(bool direction) {
-  if (isStalled()) return;
-  if (state != IDLE) return;
+    if (isStalled()) return;
+    if (state != IDLE) return;
 
-  dirPin.setState(direction);
-  setState(CHANGING_DIRECTION);
+    dirPin.setState(direction);
+    setState(CHANGING_DIRECTION);
 }
 
 void CarriageController::stopMovement() {
-  if (isStalled()) return;
-  if (state != MOVING) return;
+    if (isStalled()) return;
+    if (state != MOVING) return;
 
-  stopPin.setState(LOW);
-  setState(STOPPING);
+    stopPin.setState(LOW);
+    setState(STOPPING);
 }
