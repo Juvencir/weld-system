@@ -2,9 +2,6 @@
 
 #include <Arduino.h>
 
-constexpr uint32_t BUTTON_DEFAULT_DEBOUNCE_DELAY = 50;
-constexpr uint32_t BUTTON_LONG_PRESS_DELAY = 1000;
-
 class Button {
    public:
     enum ButtonEvent { BUTTON_EVENT_PRESS, BUTTON_EVENT_RELEASE, BUTTON_EVENT_LONG_PRESS };

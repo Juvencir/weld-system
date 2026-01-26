@@ -2,8 +2,6 @@
 
 #include <Arduino.h>
 
-constexpr uint32_t BYPASS_PIN_STALL_THRESHOLD = 100;
-
 class BypassPin {
    public:
     using StallHandler = void (*)(BypassPin&);

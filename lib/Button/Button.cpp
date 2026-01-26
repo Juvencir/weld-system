@@ -1,5 +1,10 @@
 #include "Button.h"
 
+namespace {
+constexpr uint32_t BUTTON_DEFAULT_DEBOUNCE_DELAY = 50;
+constexpr uint32_t BUTTON_LONG_PRESS_DELAY = 1000;
+}
+
 void Button::begin() {
     pinMode(pin, INPUT_PULLUP);
     lastDebounceTime = millis();

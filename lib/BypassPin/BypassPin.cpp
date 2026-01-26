@@ -1,5 +1,9 @@
 #include "BypassPin.h"
 
+namespace {
+constexpr uint32_t BYPASS_PIN_STALL_THRESHOLD = 100;
+}
+
 void BypassPin::begin() {
     state = HIGH;
     stalled = false;
