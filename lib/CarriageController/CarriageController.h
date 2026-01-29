@@ -13,7 +13,7 @@ constexpr uint32_t STATE_CHANGE_DELAY = 20;
 
 class CarriageController {
    public:
-    enum State { IDLE, STARTING, STOPPING, CHANGING_DIRECTION, MOVING };
+    enum class State { IDLE, STARTING, STOPPING, CHANGING_DIRECTION, MOVING };
 
     static void begin();
     static void update();
@@ -26,7 +26,7 @@ class CarriageController {
     static inline BypassPin startPin = BypassPin(START_PIN, stop);
     static inline BypassPin stopPin = BypassPin(STOP_PIN, stop);
     static inline BypassPin dirPin = BypassPin(DIR_PIN, stop);
-    static inline State state = IDLE;
+    static inline State state = State::IDLE;
     static inline uint32_t lastStateChangeTime = 0;
     static void setState(State newState);
 };

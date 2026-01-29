@@ -45,14 +45,14 @@ void Driver::begin() {
     uart_param_config(_uartPort, &UART_CONFIG);
     uart_set_pin(_uartPort, _txPin, _rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_set_rx_timeout(_uartPort, 20);
-    
+
     xTaskCreate(rxTaskEntry, "DriverRxTask", 4096, this, 2, &_rxTaskHandle);
 }
 
 bool Driver::send(const Packet& packet) {
     if (!_txMutex) return false;
 
-    uint8_t buffer[300];
+    uint8_t buffer[Packet::MAX_PACKET_SIZE];
 
     if (xSemaphoreTake(_txMutex, portMAX_DELAY) == pdTRUE) {
         size_t len = packet.serialize(buffer, sizeof(buffer));
@@ -62,6 +62,7 @@ bool Driver::send(const Packet& packet) {
         xSemaphoreGive(_txMutex);
         return len > 0;
     }
+    return false;
 }
 
 bool Driver::receive(Packet& packet, TickType_t waitTicks) {
@@ -85,7 +86,7 @@ void Driver::rxTaskLoop() {
             for (int i = 0; i < length; i++) {
                 if (currentPacket == nullptr) {
                     currentPacket = getFromPool();
-                    if (!currentPacket) continue; 
+                    if (!currentPacket) continue;
                 }
 
                 if (_decoder.feed(data[i], *currentPacket)) {

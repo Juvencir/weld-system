@@ -5,43 +5,43 @@
 PacketDecoder::PacketDecoder() { reset(); }
 
 void PacketDecoder::reset() {
-    _state = WAIT_START;
+    _state = State::WAIT_START;
     _bytesReadCount = 0;
 }
 
 bool PacketDecoder::feed(uint8_t byte, Packet& out) {
     switch (_state) {
-        case WAIT_START:
+        case State::WAIT_START:
             if (byte == START_BYTE) {
-                _state = READ_TYPE;
+                _state = State::READ_TYPE;
             }
             break;
 
-        case READ_TYPE:
+        case State::READ_TYPE:
             out.type = (MsgType)byte;
-            _state = READ_LENGTH;
+            _state = State::READ_LENGTH;
             break;
 
-        case READ_LENGTH:
+        case State::READ_LENGTH:
             out.length = byte;
             _bytesReadCount = 0;
             if (out.length > 0) {
-                _state = READ_PAYLOAD;
+                _state = State::READ_PAYLOAD;
             } else {
-                _state = READ_CHECKSUM;
+                _state = State::READ_CHECKSUM;
             }
 
             break;
 
-        case READ_PAYLOAD:
+        case State::READ_PAYLOAD:
             out.payload[_bytesReadCount++] = byte;
             if (_bytesReadCount >= out.length) {
                 _bytesReadCount = 0;
-                _state = READ_CHECKSUM;
+                _state = State::READ_CHECKSUM;
             }
             break;
 
-        case READ_CHECKSUM:
+        case State::READ_CHECKSUM:
             _checksumBuf[_bytesReadCount++] = byte;
             if (_bytesReadCount >= 4) {
                 uint32_t receivedCrc =
@@ -70,16 +70,16 @@ uint32_t Packet::checksum() const {
 }
 
 size_t Packet::serialize(uint8_t* buffer, size_t bufferSize) const {
-    if(bufferSize < 3 + length + 4) {
+    if (bufferSize < HEADER_SIZE + length + CHECKSUM_SIZE) {
         return 0;
     }
     size_t written = 0;
 
     buffer[written++] = START_BYTE;
-    buffer[written++] = (byte)type;
+    buffer[written++] = (uint8_t)type;
     buffer[written++] = length;
 
-    if(length > 0) {
+    if (length > 0) {
         std::copy(payload, payload + length, buffer + written);
         written += length;
     }

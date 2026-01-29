@@ -1,7 +1,7 @@
 #include "BypassPin.h"
 
 namespace {
-constexpr uint32_t BYPASS_PIN_STALL_THRESHOLD = 100;
+constexpr uint32_t STALL_THRESHOLD = 100;
 }
 
 void BypassPin::begin() {
@@ -21,7 +21,7 @@ void BypassPin::checkStall() {
 
     if (state == HIGH && digitalRead(pin) == LOW) {
         uint32_t currentTime = millis();
-        if (currentTime - lastHighTime > BYPASS_PIN_STALL_THRESHOLD) {
+        if (currentTime - lastHighTime > STALL_THRESHOLD) {
             end();
         }
     }

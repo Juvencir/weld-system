@@ -4,7 +4,8 @@
 
 class Button {
    public:
-    enum ButtonEvent { BUTTON_EVENT_PRESS, BUTTON_EVENT_RELEASE, BUTTON_EVENT_LONG_PRESS };
+    enum class ButtonEvent { PRESS, RELEASE, LONG_PRESS };
+
     using EventHandler = void (*)(Button&, ButtonEvent);
 
     explicit Button(uint8_t pin, EventHandler callback = nullptr) : pin(pin), onEvent(callback) {}

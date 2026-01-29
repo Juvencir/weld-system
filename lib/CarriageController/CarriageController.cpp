@@ -6,7 +6,7 @@ void CarriageController::begin() {
     startPin.begin();
     stopPin.begin();
     dirPin.begin();
-    state = IDLE;
+    state = State::IDLE;
 }
 
 void CarriageController::update() {
@@ -14,20 +14,20 @@ void CarriageController::update() {
     stopPin.update();
     dirPin.update();
 
-    if (state != IDLE && state != MOVING) {
+    if (state != State::IDLE && state != State::MOVING) {
         unsigned long currentTime = millis();
         if (currentTime - lastStateChangeTime >= STATE_CHANGE_DELAY) {
             switch (state) {
-                case STARTING:
+                case State::STARTING:
                     startPin.setState(HIGH);
-                    state = MOVING;
+                    state = State::MOVING;
                     break;
-                case STOPPING:
+                case State::STOPPING:
                     stopPin.setState(HIGH);
-                    state = IDLE;
+                    state = State::IDLE;
                     break;
-                case CHANGING_DIRECTION:
-                    setState(STARTING);
+                case State::CHANGING_DIRECTION:
+                    setState(State::STARTING);
                     break;
             }
         }
@@ -47,20 +47,22 @@ void CarriageController::stop(BypassPin& pin) {
     dirPin.end();
 }
 
-bool CarriageController::isStalled() { return startPin.isStalled() || stopPin.isStalled() || dirPin.isStalled(); }
+bool CarriageController::isStalled() {
+    return startPin.isStalled() || stopPin.isStalled() || dirPin.isStalled();
+}
 
 void CarriageController::startMovement(bool direction) {
     if (isStalled()) return;
-    if (state != IDLE) return;
+    if (state != State::IDLE) return;
 
     dirPin.setState(direction);
-    setState(CHANGING_DIRECTION);
+    setState(State::CHANGING_DIRECTION);
 }
 
 void CarriageController::stopMovement() {
     if (isStalled()) return;
-    if (state != MOVING) return;
+    if (state != State::MOVING) return;
 
     stopPin.setState(LOW);
-    setState(STOPPING);
+    setState(State::STOPPING);
 }

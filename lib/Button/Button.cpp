@@ -1,8 +1,8 @@
 #include "Button.h"
 
 namespace {
-constexpr uint32_t BUTTON_DEFAULT_DEBOUNCE_DELAY = 50;
-constexpr uint32_t BUTTON_LONG_PRESS_DELAY = 1000;
+constexpr uint32_t DEBOUNCE_DELAY = 50;
+constexpr uint32_t LONG_PRESS_DELAY = 1000;
 }
 
 void Button::begin() {
@@ -15,21 +15,21 @@ void Button::update() {
     if (currentState != lastReadState) {
         lastDebounceTime = millis();
     }
-    if ((millis() - lastDebounceTime) > BUTTON_DEFAULT_DEBOUNCE_DELAY) {
+    if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
         if (currentState != confirmedState) {
             confirmedState = currentState;
             if (isPressed()) {
                 pressStartTime = millis();
-                if (onEvent) onEvent(*this, Button::BUTTON_EVENT_PRESS);
+                if (onEvent) onEvent(*this, ButtonEvent::PRESS);
             } else {
-                if (onEvent) onEvent(*this, Button::BUTTON_EVENT_RELEASE);
+                if (onEvent) onEvent(*this, ButtonEvent::RELEASE);
                 longPressState = false;
             }
         }
     }
     if (isPressed() && !longPressState) {
-        if (millis() - pressStartTime > BUTTON_LONG_PRESS_DELAY) {
-            if (onEvent) onEvent(*this, Button::BUTTON_EVENT_LONG_PRESS);
+        if (millis() - pressStartTime > LONG_PRESS_DELAY) {
+            if (onEvent) onEvent(*this, ButtonEvent::LONG_PRESS);
             longPressState = true;
         }
     }
@@ -38,7 +38,7 @@ void Button::update() {
 
 bool Button::isPressed() { return !confirmedState; }
 
-u_int32_t Button::getPressDuration() {
+uint32_t Button::getPressDuration() {
     if (!isPressed()) {
         return 0;
     }

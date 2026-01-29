@@ -1,10 +1,8 @@
 #pragma once
 
-#include <Arduino.h>
 #include <driver/uart.h>
-#include "Packet.h"
 
-constexpr int PACKET_POOL_SIZE = 4;
+#include "Packet.h"
 
 class Driver {
    public:
@@ -16,9 +14,9 @@ class Driver {
     bool receive(Packet& packet, TickType_t waitTicks = portMAX_DELAY);
 
    private:
-    static void rxTaskEntry(void* arg) {
-        static_cast<Driver*>(arg)->rxTaskLoop();
-    }
+    static constexpr int PACKET_POOL_SIZE = 4;
+
+    static void rxTaskEntry(void* arg) { static_cast<Driver*>(arg)->rxTaskLoop(); }
 
     void rxTaskLoop();
     Packet* getFromPool();

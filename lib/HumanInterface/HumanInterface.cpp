@@ -14,7 +14,7 @@ void HumanInterface::buttonEventHandler(Button& button, Button::ButtonEvent even
     }
 
     if (_activeButton == nullptr) {
-        if (event == Button::BUTTON_EVENT_PRESS) {
+        if (event == Button::ButtonEvent::PRESS) {
             _activeButton = &button;
         } else {
             return;
@@ -22,10 +22,10 @@ void HumanInterface::buttonEventHandler(Button& button, Button::ButtonEvent even
     }
 
     if (&button == &midButton) {
-        if (event == Button::BUTTON_EVENT_LONG_PRESS) {
+        if (event == Button::ButtonEvent::LONG_PRESS) {
             // Inicia a solda
         }
-        if (event == Button::BUTTON_EVENT_RELEASE) {
+        if (event == Button::ButtonEvent::RELEASE) {
             if (midButton.isLongPressed()) {
                 // Para a solda
             } else {
@@ -35,23 +35,23 @@ void HumanInterface::buttonEventHandler(Button& button, Button::ButtonEvent even
     }
 
     if (&button == &topButton) {
-        if (event == Button::BUTTON_EVENT_PRESS) {
+        if (event == Button::ButtonEvent::PRESS) {
             // Move para a esquerda
         }
-        if (event == Button::BUTTON_EVENT_RELEASE) {
+        if (event == Button::ButtonEvent::RELEASE) {
             // Para o movimento
         }
     }
     if (&button == &botButton) {
-        if (event == Button::BUTTON_EVENT_PRESS) {
+        if (event == Button::ButtonEvent::PRESS) {
             // Move para a direita
         }
-        if (event == Button::BUTTON_EVENT_RELEASE) {
+        if (event == Button::ButtonEvent::RELEASE) {
             // Para o movimento
         }
     }
 
-    if (event == Button::BUTTON_EVENT_RELEASE) {
+    if (event == Button::ButtonEvent::RELEASE) {
         _activeButton = nullptr;
     }
 }
