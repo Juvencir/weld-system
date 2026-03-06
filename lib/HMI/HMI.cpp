@@ -1,6 +1,6 @@
 #include "HMI.h"
 
-void HMI::begin(callback_function_t isrLeft, callback_function_t isrRight, callback_function_t isrTrigger) {
+void HMI::begin(callback isrLeft, callback isrRight, callback isrTrigger) {
     _buttonLeft.begin(isrLeft);
     _buttonRight.begin(isrRight);
     _buttonTrigger.begin(isrTrigger);

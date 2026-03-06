@@ -13,10 +13,10 @@ void Button::begin(callback_function_t isrHandler) {
 
 void Button::handleISRChange() {
     if (digitalRead(_pin) == LOW) {
-        // Pressionou o botão (Falling)
+        // Falling - Pressionou o botão
         _pressStartTime = millis();
     } else {
-        // Soltou o botão (Rising)
+        // Rising - Soltou o botão
         uint32_t duration = millis() - _pressStartTime;
         if (duration >= DEBOUNCE_DELAY) {
             _lastPressDuration = duration;

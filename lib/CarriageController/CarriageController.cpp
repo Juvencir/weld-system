@@ -1,0 +1,55 @@
+#include "CarriageController.h"
+
+void CarriageController::begin() {
+    _start.begin();
+    _stop.begin();
+    _direction.begin();
+}
+
+void CarriageController::update() {
+    _start.update();
+    _stop.update();
+    _direction.update();
+
+    if (isStalled()) {
+        state = State::STOPPED;
+        return;
+    }
+
+    switch (state) {
+        case State::STARTING:
+            if (millis() - _changeTime >= CHANGE_DELAY) {
+                state = State::STARTED;
+                _start.setState(HIGH);
+            }
+            break;
+        case State::STOPPING:
+            if (millis() - _changeTime >= CHANGE_DELAY) {
+                state = State::STOPPED;
+                _stop.setState(HIGH);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+bool CarriageController::start() {
+    if (state != State::STOPPED || isStalled()) {
+        return false;
+    }
+    _start.setState(LOW);
+    state = State::STARTING;
+    _changeTime = millis();
+    return true;
+}
+
+bool CarriageController::stop() {
+    if (state != State::STARTED || isStalled()) {
+        return false;
+    }
+    _stop.setState(LOW);
+    state = State::STOPPING;
+    _changeTime = millis();
+    return true;
+}
