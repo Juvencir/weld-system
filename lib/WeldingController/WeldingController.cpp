@@ -1,5 +1,9 @@
 #include "WeldingController.h"
 
+namespace {
+    constexpr uint32_t CHANGE_DELAY = 100;
+}
+
 void WeldingController::begin() {
     pinMode(PIN, OUTPUT);
     digitalWrite(PIN, HIGH);

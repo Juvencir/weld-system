@@ -11,24 +11,25 @@ class HMI {
         return instance;
     }
 
-    using callback = std::function<void()>;
+    using Callback = std::function<void()>;
 
     static constexpr uint32_t BTN_LEFT_PIN = PB13;
     static constexpr uint32_t BTN_RIGHT_PIN = PB14;
     static constexpr uint32_t BTN_TRIGGER_PIN = PB15;
     static constexpr uint32_t LED_READY_PIN = PA8;
-    static constexpr uint32_t LED_STALLED_PIN = PA9;
+    static constexpr uint32_t LED_ERROR_PIN = PA9;
 
-    void begin(callback isrLeft, callback isrRight,
-               callback isrTrigger);
+    void begin(Callback isrLeft, Callback isrRight,
+               Callback isrTrigger);
     void update();
 
     void setTriggerReadyLED(bool state);
     void setBypassStalledLED(bool state);
+    void setErrorLED(bool state);
 
-    void onLeftPress(callback cb) { _leftCallback = cb; }
-    void onRightPress(callback cb) { _rightCallback = cb; }
-    void onTriggerLongPress(callback cb) { _triggerCallback = cb; }
+    void onLeftPress(Callback cb) { _leftCallback = cb; }
+    void onRightPress(Callback cb) { _rightCallback = cb; }
+    void onTriggerLongPress(Callback cb) { _triggerCallback = cb; }
 
    private:
     HMI() = default;
@@ -41,7 +42,7 @@ class HMI {
     Button _buttonRight{BTN_RIGHT_PIN};
     Button _buttonTrigger{BTN_TRIGGER_PIN};
 
-    callback _leftCallback = nullptr;
-    callback _rightCallback = nullptr;
-    callback _triggerCallback = nullptr;
+    Callback _leftCallback = nullptr;
+    Callback _rightCallback = nullptr;
+    Callback _triggerCallback = nullptr;
 };

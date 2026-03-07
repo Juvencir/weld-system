@@ -6,8 +6,6 @@ class WeldingController {
    public:
     static constexpr uint32_t PIN = PA0;
 
-    static constexpr uint32_t CHANGE_DELAY = 100;
-
     static WeldingController& getInstance() {
         static WeldingController instance;
         return instance;

@@ -1,5 +1,9 @@
 #include "CarriageController.h"
 
+namespace {
+    constexpr uint32_t CHANGE_DELAY = 20;
+}
+
 void CarriageController::begin() {
     _start.begin();
     _stop.begin();

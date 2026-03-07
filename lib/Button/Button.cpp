@@ -7,7 +7,7 @@ namespace {
 Button::Button(uint32_t pin) : _pin(pin) {}
 
 void Button::begin(callback_function_t isrHandler) { 
-    pinMode(_pin, INPUT_PULLUP);
+    pinMode(_pin, INPUT);
     attachInterrupt(digitalPinToInterrupt(_pin), isrHandler, CHANGE);
 }
 

@@ -1,12 +1,12 @@
 #include "HMI.h"
 
-void HMI::begin(callback isrLeft, callback isrRight, callback isrTrigger) {
+void HMI::begin(Callback isrLeft, Callback isrRight, Callback isrTrigger) {
     _buttonLeft.begin(isrLeft);
     _buttonRight.begin(isrRight);
     _buttonTrigger.begin(isrTrigger);
 
     pinMode(LED_READY_PIN, OUTPUT);
-    pinMode(LED_STALLED_PIN, OUTPUT);
+    pinMode(LED_ERROR_PIN, OUTPUT);
 }
 
 void HMI::update() {
@@ -30,6 +30,6 @@ void HMI::setTriggerReadyLED(bool state) {
     digitalWrite(LED_READY_PIN, state);
 }
 
-void HMI::setBypassStalledLED(bool state) {
-    digitalWrite(LED_STALLED_PIN, state);
+void HMI::setErrorLED(bool state) {
+    digitalWrite(LED_ERROR_PIN, state);
 }

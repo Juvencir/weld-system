@@ -6,13 +6,11 @@
 
 class CarriageController {
    public:
-    enum class State : uint8_t { STOPPED = 0, STARTING, STARTED, STOPPING };
+    enum class State : uint8_t { STOPPED, STARTING, STARTED, STOPPING };
 
     static constexpr uint32_t PIN_START = PA0;
     static constexpr uint32_t PIN_STOP = PA1;
     static constexpr uint32_t PIN_DIRECTION = PA0;
-
-    static constexpr uint32_t CHANGE_DELAY = 20;
 
     static CarriageController& getInstance() {
         static CarriageController instance;
