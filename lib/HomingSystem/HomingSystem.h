@@ -13,9 +13,6 @@ class HomingSystem {
         return instance;
     }
 
-    static const uint32_t SENSOR_LEFT_PIN = PA0;
-    static const uint32_t SENSOR_RIGHT_PIN = PA1;
-
     void begin();
 
     State getState() const;

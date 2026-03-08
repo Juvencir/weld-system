@@ -1,8 +1,15 @@
 #include "CarriageController.h"
 
+#include "Pins.h"
+
 namespace {
-    constexpr uint32_t CHANGE_DELAY = 20;
+constexpr uint32_t CHANGE_DELAY = 20;
 }
+
+CarriageController::CarriageController()
+    : _start(Pins::CARRIAGE_START_PIN),
+      _stop(Pins::CARRIAGE_STOP_PIN),
+      _direction(Pins::CARRIAGE_DIR_PIN) {}
 
 void CarriageController::begin() {
     _start.begin();

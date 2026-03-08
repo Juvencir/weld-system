@@ -8,10 +8,6 @@ class CarriageController {
    public:
     enum class State : uint8_t { STOPPED, STARTING, STARTED, STOPPING };
 
-    static constexpr uint32_t PIN_START = PA0;
-    static constexpr uint32_t PIN_STOP = PA1;
-    static constexpr uint32_t PIN_DIRECTION = PA0;
-
     static CarriageController& getInstance() {
         static CarriageController instance;
         return instance;
@@ -32,13 +28,13 @@ class CarriageController {
     }
 
    private:
-    CarriageController() = default;
+    CarriageController();
 
     State state = State::STOPPED;
 
-    BypassPin _start{PIN_START};
-    BypassPin _stop{PIN_STOP};
-    BypassPin _direction{PIN_DIRECTION};
+    BypassPin _start;
+    BypassPin _stop;
+    BypassPin _direction;
 
     uint32_t _changeTime = 0;
 };
