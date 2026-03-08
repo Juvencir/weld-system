@@ -3,23 +3,9 @@
 void HomingSystem::begin() {
     pinMode(SENSOR_LEFT_PIN, INPUT_PULLUP);
     pinMode(SENSOR_RIGHT_PIN, INPUT_PULLUP);
-    
-    _currentState = readSensors();
 }
 
-void HomingSystem::update() {
-    State newState = readSensors();
-
-    if (newState != _currentState) {
-        _currentState = newState;
-        
-        if (_currentState != State::NONE && _callback) {
-            _callback(_currentState);
-        }
-    }
-}
-
-HomingSystem::State HomingSystem::readSensors() {
+HomingSystem::State HomingSystem::getState() const {
     bool s1_triggered = (digitalRead(SENSOR_LEFT_PIN) == LOW);
     bool s2_triggered = (digitalRead(SENSOR_RIGHT_PIN) == LOW);
 
