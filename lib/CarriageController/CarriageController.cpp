@@ -10,7 +10,7 @@ void CarriageController::begin() {
     _direction.begin();
 }
 
-void CarriageController::update() {
+void CarriageController::update(uint32_t now) {
     _start.update();
     _stop.update();
     _direction.update();
@@ -22,13 +22,13 @@ void CarriageController::update() {
 
     switch (state) {
         case State::STARTING:
-            if (millis() - _changeTime >= CHANGE_DELAY) {
+            if (now - _changeTime >= CHANGE_DELAY) {
                 state = State::STARTED;
                 _start.setState(HIGH);
             }
             break;
         case State::STOPPING:
-            if (millis() - _changeTime >= CHANGE_DELAY) {
+            if (now - _changeTime >= CHANGE_DELAY) {
                 state = State::STOPPED;
                 _stop.setState(HIGH);
             }

@@ -18,7 +18,7 @@ class CarriageController {
     }
 
     void begin();
-    void update();
+    void update(uint32_t now);
 
     bool start();
     bool stop();

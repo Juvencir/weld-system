@@ -9,8 +9,8 @@ void WeldingController::begin() {
     digitalWrite(PIN, HIGH);
 }
 
-void WeldingController::update() {
-    if (_changePending && (millis() - _lastChangeTime >= CHANGE_DELAY)) {
+void WeldingController::update(uint32_t now) {
+    if (_changePending && (now - _lastChangeTime >= CHANGE_DELAY)) {
         digitalWrite(PIN, HIGH);
         _changePending = false;
     }
