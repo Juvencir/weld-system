@@ -1,13 +1,10 @@
 #pragma once
 
-#include <Arduino.h>
+#include <cstdint>
 
 class WeldingController {
    public:
-    static WeldingController& getInstance() {
-        static WeldingController instance;
-        return instance;
-    }
+    WeldingController(uint32_t pin) : _pin(pin) {}
 
     void begin();
     void update(uint32_t now);
@@ -15,7 +12,7 @@ class WeldingController {
     void toggle();
 
    private:
-    WeldingController() = default;
+    const uint32_t _pin;
 
     uint32_t _lastChangeTime = 0;
     bool _changePending = false;

@@ -1,15 +1,15 @@
 #include "HomingSystem.h"
 
-#include "Pins.h"
+#include <Arduino.h>
 
 void HomingSystem::begin() {
-    pinMode(Pins::HOMING_SENSOR_LEFT_PIN, INPUT);
-    pinMode(Pins::HOMING_SENSOR_RIGHT_PIN, INPUT);
+    pinMode(_pinLeft, INPUT);
+    pinMode(_pinRight, INPUT);
 }
 
 HomingSystem::State HomingSystem::getState() const {
-    bool left_triggered = (digitalRead(Pins::HOMING_SENSOR_LEFT_PIN) == LOW);
-    bool right_triggered = (digitalRead(Pins::HOMING_SENSOR_RIGHT_PIN) == LOW);
+    bool left_triggered = (digitalRead(_pinLeft) == LOW);
+    bool right_triggered = (digitalRead(_pinRight) == LOW);
 
     if (left_triggered && right_triggered) {
         return State::BOTH;

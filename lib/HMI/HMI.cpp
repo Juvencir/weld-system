@@ -1,5 +1,7 @@
 #include "HMI.h"
 
+#include <Arduino.h>
+
 #include "Pins.h"
 
 HMI::HMI()

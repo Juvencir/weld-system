@@ -1,11 +1,5 @@
 #include "Button.h"
 
-namespace {
-    constexpr uint32_t DEBOUNCE_DELAY = 50;
-}
-
-Button::Button(uint32_t pin) : _pin(pin) {}
-
 void Button::begin(callback_function_t isrHandler) { 
     pinMode(_pin, INPUT);
     attachInterrupt(digitalPinToInterrupt(_pin), isrHandler, CHANGE);
@@ -19,7 +13,7 @@ void Button::handleISRChange() {
     } else {
         // Rising - Soltou o botão
         uint32_t duration = now - _pressStartTime;
-        if (duration >= DEBOUNCE_DELAY) {
+        if (duration >= _minPressDuration) {
             _lastPressDuration = duration;
             _wasPressedEvent = true;
         }

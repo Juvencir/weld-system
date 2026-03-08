@@ -1,5 +1,7 @@
 #include "CarriageController.h"
 
+#include <Arduino.h>
+
 #include "Pins.h"
 
 namespace {
@@ -63,4 +65,12 @@ bool CarriageController::stop() {
     state = State::STOPPING;
     _changeTime = millis();
     return true;
+}
+
+CarriageController::State CarriageController::getState() const { return state; };
+
+void CarriageController::setDirection(bool forward) { _direction.setState(forward ? HIGH : LOW); }
+
+bool CarriageController::isStalled() const {
+    return _start.isStalled() || _stop.isStalled() || _direction.isStalled();
 }

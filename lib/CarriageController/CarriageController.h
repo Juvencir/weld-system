@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include <cstdint>
 
 #include "BypassPin.h"
 
@@ -19,13 +19,11 @@ class CarriageController {
     bool start();
     bool stop();
 
-    State getState() const { return state; };
+    State getState() const;
 
-    void setDirection(bool forward) { _direction.setState(forward ? HIGH : LOW); }
+    void setDirection(bool forward);
 
-    bool isStalled() const {
-        return _start.isStalled() || _stop.isStalled() || _direction.isStalled();
-    }
+    bool isStalled() const;
 
    private:
     CarriageController();
