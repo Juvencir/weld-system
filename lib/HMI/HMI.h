@@ -1,22 +1,26 @@
 #pragma once
 
+#include <Arduino.h>
+
 #include "Button.h"
 
 class HMI {
    public:
+    enum class Status : uint8_t { IDLE, READY, ERROR };
+
     static HMI& getInstance() {
         static HMI instance;
         return instance;
     }
 
     void begin();
+    void update(uint32_t now);
 
     bool isLeftPressed();
     bool isRightPressed();
     bool isTriggerPressed();
 
-    void setReadyLED(bool state);
-    void setErrorLED(bool state);
+    void setStatus(Status status);
 
    private:
     HMI();
@@ -28,4 +32,7 @@ class HMI {
     Button _buttonLeft;
     Button _buttonRight;
     Button _buttonTrigger;
+
+    Status _currentStatus = Status::IDLE;
+    uint32_t _statusTimer;
 };

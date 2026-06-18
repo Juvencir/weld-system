@@ -1,6 +1,6 @@
 #include "Button.h"
 
-void Button::begin(callback_function_t isrHandler) { 
+void Button::begin(callback_function_t isrHandler) {
     pinMode(_pin, INPUT);
     attachInterrupt(digitalPinToInterrupt(_pin), isrHandler, CHANGE);
 }
@@ -20,9 +20,7 @@ void Button::handleISRChange() {
     }
 }
 
-bool Button::wasPressed() const {
-    return _wasPressedEvent;
-}
+bool Button::wasPressed() const { return _wasPressedEvent; }
 
 uint32_t Button::getPressDuration() {
     noInterrupts();
@@ -30,10 +28,10 @@ uint32_t Button::getPressDuration() {
         interrupts();
         return 0;
     }
-    
+
     uint32_t duration = _lastPressDuration;
     _wasPressedEvent = false;
     interrupts();
-    
+
     return duration;
 }

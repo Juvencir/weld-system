@@ -14,10 +14,33 @@ void HMI::begin() {
     _buttonRight.begin(isrRight);
     _buttonTrigger.begin(isrTrigger);
 
-    pinMode(Pins::HMI_LED_READY_PIN, OUTPUT);
-    pinMode(Pins::HMI_LED_ERROR_PIN, OUTPUT);
-    setReadyLED(false);
-    setErrorLED(false);
+    pinMode(Pins::HMI_LED_PIN, OUTPUT);
+    digitalWrite(Pins::HMI_LED_PIN, LOW);
+}
+
+void HMI::update(uint32_t now) {
+    if (_currentStatus == Status::ERROR) {
+        if (now - _statusTimer >= 300) {
+            _statusTimer = now;
+            digitalWrite(Pins::HMI_LED_PIN, !digitalRead(Pins::HMI_LED_PIN));
+        }
+    }
+}
+
+void HMI::setStatus(Status status) {
+    _currentStatus = status;
+    switch (status) {
+        case Status::IDLE:
+            digitalWrite(Pins::HMI_LED_PIN, LOW);
+            break;
+        case Status::READY:
+            digitalWrite(Pins::HMI_LED_PIN, HIGH);
+            break;
+        case Status::ERROR:
+            _statusTimer = millis();
+            digitalWrite(Pins::HMI_LED_PIN, HIGH);
+            break;
+    }
 }
 
 bool HMI::isLeftPressed() {
@@ -43,7 +66,3 @@ bool HMI::isTriggerPressed() {
     }
     return false;
 }
-
-void HMI::setReadyLED(bool state) { digitalWrite(Pins::HMI_LED_READY_PIN, state); }
-
-void HMI::setErrorLED(bool state) { digitalWrite(Pins::HMI_LED_ERROR_PIN, state); }
