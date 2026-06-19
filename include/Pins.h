@@ -6,7 +6,7 @@ namespace Pins {
     //HMI
     constexpr uint32_t HMI_BTN_LEFT_PIN = PB14;
     constexpr uint32_t HMI_BTN_RIGHT_PIN = PB13;
-    constexpr uint32_t HMI_BTN_TRIGGER_PIN = PB15;
+    constexpr uint32_t HMI_BTN_TRIGGER_PIN = PB12;
     constexpr uint32_t HMI_LED_PIN = PA15;
 
     //CarriageController

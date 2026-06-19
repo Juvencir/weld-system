@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "Log.h"
 #include "Pins.h"
 
 HMI::HMI()
@@ -19,7 +20,7 @@ void HMI::begin() {
 }
 
 void HMI::update(uint32_t now) {
-    if (_currentStatus == Status::ERROR) {
+    if (_currentStatus == Status::RUNNING) {
         if (now - _statusTimer >= 300) {
             _statusTimer = now;
             digitalWrite(Pins::HMI_LED_PIN, !digitalRead(Pins::HMI_LED_PIN));
@@ -31,12 +32,15 @@ void HMI::setStatus(Status status) {
     _currentStatus = status;
     switch (status) {
         case Status::IDLE:
+            LOG_HMI("status -> IDLE");
             digitalWrite(Pins::HMI_LED_PIN, LOW);
             break;
         case Status::READY:
+            LOG_HMI("status -> READY");
             digitalWrite(Pins::HMI_LED_PIN, HIGH);
             break;
-        case Status::ERROR:
+        case Status::RUNNING:
+            LOG_HMI("status -> RUNNING");
             _statusTimer = millis();
             digitalWrite(Pins::HMI_LED_PIN, HIGH);
             break;
@@ -60,7 +64,7 @@ bool HMI::isRightPressed() {
 }
 
 bool HMI::isTriggerPressed() {
-    constexpr uint32_t LONG_PRESS_DURATION = 1000;
+    constexpr uint32_t LONG_PRESS_DURATION = 200;
     if (_buttonTrigger.wasPressed() && _buttonTrigger.getPressDuration() > LONG_PRESS_DURATION) {
         return true;
     }

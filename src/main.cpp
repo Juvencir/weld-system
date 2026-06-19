@@ -9,11 +9,11 @@
 EndStop endStop(Pins::ENDSTOP_SENSOR_PIN);
 AxisController axisController(Pins::CARRIAGE_START_PIN, Pins::CARRIAGE_STOP_PIN,
                               Pins::CARRIAGE_DIR_PIN, endStop);
-SystemController systemController(HMI::getInstance(), axisController);
+PulseOutput weldingController(Pins::WELDING_PIN, 200, LOW, OUTPUT);
+SystemController systemController(HMI::getInstance(), axisController, weldingController, 3000, 500);
 
 void setup() {
     Serial.begin(115200);
-    Serial.print("Inicio");
     systemController.begin();
 }
 

@@ -6,7 +6,7 @@
 
 class HMI {
    public:
-    enum class Status : uint8_t { IDLE, READY, ERROR };
+    enum class Status : uint8_t { IDLE, READY, RUNNING };
 
     static HMI& getInstance() {
         static HMI instance;
