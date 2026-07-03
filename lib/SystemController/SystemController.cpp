@@ -59,10 +59,46 @@ void SystemController::handleDeposit(uint32_t now) {
 }
 
 void SystemController::handleInputs(uint32_t now) {
-    bool isLeft = _hmi.isLeftPressed();
-    bool isRight = _hmi.isRightPressed();
-    bool isTrigger = _hmi.isTriggerPressed();
-    
+    bool isLeft = false, isRight = false, isTrigger = false;
+
+    // --- Serial HMI simulation (test hack) ---
+    if (Serial.available()) {
+        char cmd = Serial.read();
+
+        if (cmd == 'S' || cmd == 's') {
+            Serial.println("[SERIAL] Enter moveStartOffsetMs and weldStopOffsetMs (ms):");
+            Serial.setTimeout(10000);
+            int32_t val1 = Serial.parseInt();
+            int32_t val2 = Serial.parseInt();
+            if (val1 >= 0 && val2 >= 0) {
+                _moveStartOffsetMs = val1;
+                _weldStopOffsetMs = val2;
+                Serial.print("[SERIAL] Updated: moveStart=");
+                Serial.print(_moveStartOffsetMs);
+                Serial.print(" weldStop=");
+                Serial.println(_weldStopOffsetMs);
+            }
+            while (Serial.available()) Serial.read();
+            return;
+        }
+
+        isLeft = (cmd == 'L' || cmd == 'l');
+        isRight = (cmd == 'R' || cmd == 'r');
+        isTrigger = (cmd == 'T' || cmd == 't');
+    }
+
+    if (!isLeft && !isRight && !isTrigger) {
+        isLeft = _hmi.isLeftPressed();
+        isRight = _hmi.isRightPressed();
+        isTrigger = _hmi.isTriggerPressed();
+    } else {
+        // Consume pending HMI events to prevent stale triggers
+        _hmi.isLeftPressed();
+        _hmi.isRightPressed();
+        _hmi.isTriggerPressed();
+    }
+    // --- End serial HMI ---
+
     if (_depositState != DepositState::IDLE) {
         return;
     }

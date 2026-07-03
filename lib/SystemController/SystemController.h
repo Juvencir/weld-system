@@ -57,9 +57,9 @@ class SystemController {
     PulseOutput& _weldingController;
 
     // Offset relativo entre ativação da solda e ativação do movimento
-    const uint32_t _moveStartOffsetMs;
+    uint32_t _moveStartOffsetMs;
     // Offset entre HOME do eixo e desativação da solda
-    const uint32_t _weldStopOffsetMs;
+    uint32_t _weldStopOffsetMs;
 
     /**
      * Calcula o tempo absoluto de agendamento do move() a partir do offset.
