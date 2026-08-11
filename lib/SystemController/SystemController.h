@@ -3,14 +3,18 @@
 #include <cstdint>
 
 #include "AxisController.h"
-#include "HMI.h"
 #include "Types.h"
 
 /**
- * @brief Orquestrador do sistema. Coordena HMI, movimento e soldagem.
+ * @brief Orquestrador do sistema. Coordena comandos seriais, movimento e soldagem.
  *
  * Gerencia dois modos de operação: homing simples (vai ao fim de curso e para)
  * e depósito WAAM (aciona solda, move ao fim de curso, desliga solda).
+ *
+ * Controle feito via Serial:
+ *   L/l → mover/esquerda   R/r → mover/direita   T/t → trigger/iniciar
+ *   S/s → configurar offsets (moveStartOffsetMs, weldStopOffsetMs)
+ *   I/i → exibir status atual   H/h/? → ajuda
  *
  * Os tempos de agendamento são calculados a partir de offsets relativos
  * passados no construtor, compensando automaticamente as durações dos pulsos
@@ -21,16 +25,14 @@ class SystemController {
     enum class DepositState { IDLE, WELD_TRIGGERING_START, MOVING, WELD_STOPPING, WELD_TRIGGERING_STOP };
 
     /**
-     * @param hmi                Referência ao HMI (singleton)
      * @param axisController     Referência ao controlador do eixo
      * @param weldingController  Referência ao PulseOutput da solda
      * @param moveStartOffsetMs  Offset entre ativação da solda e ativação do movimento
-     * @param weldStopOffsetMs   Offset entre HOME do eixo e desativação da solda
+     * @param weldStopOffsetMs   Offset entre parada do eixo e desativação da solda
      */
-    SystemController(HMI& hmi, AxisController& axisController, PulseOutput& weldingController,
+    SystemController(AxisController& axisController, PulseOutput& weldingController,
                      uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs)
-        : _hmi(hmi),
-          _axisController(axisController),
+        : _axisController(axisController),
           _weldingController(weldingController),
           _moveStartOffsetMs(moveStartOffsetMs),
           _weldStopOffsetMs(weldStopOffsetMs) {};
@@ -48,11 +50,11 @@ class SystemController {
     /** Aborta o depósito em andamento e retorna o eixo ao IDLE. */
     // void abortDeposit(uint32_t now);
 
-    void handleInputs(uint32_t now);
+    void handleSerialInput(uint32_t now);
     void handleDeposit(uint32_t now);
-    void updateStatus(uint32_t now);
+    void printHelp();
+    void printStatus();
 
-    HMI& _hmi;
     AxisController& _axisController;
     PulseOutput& _weldingController;
 
@@ -91,6 +93,10 @@ class SystemController {
 
     DepositState _depositState = DepositState::IDLE;
     uint32_t _depositPhaseStart;
+
+    // Estado anterior para logging de mudanças
+    AxisController::State _prevAxisState = AxisController::State::IDLE;
+    DepositState _prevDepositState = DepositState::IDLE;
 
     bool _abortWeldPending = false;
 };

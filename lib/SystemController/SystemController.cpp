@@ -2,23 +2,85 @@
 
 #include "Log.h"
 
+// ─── Helpers estáticos para nomear estados ───────────────────────────────
+
+static const char* axisStateName(AxisController::State s) {
+    switch (s) {
+        case AxisController::State::IDLE:     return "IDLE";
+        case AxisController::State::STARTING: return "STARTING";
+        case AxisController::State::MOVING:   return "MOVING";
+        case AxisController::State::STOPPING: return "STOPPING";
+        case AxisController::State::ABORTING: return "ABORTING";
+        case AxisController::State::HOME:     return "HOME";
+        default:                              return "?";
+    }
+}
+
+static const char* depositStateName(SystemController::DepositState s) {
+    switch (s) {
+        case SystemController::DepositState::IDLE:                   return "IDLE";
+        case SystemController::DepositState::WELD_TRIGGERING_START:  return "WELD_TRIGGERING_START";
+        case SystemController::DepositState::MOVING:                 return "MOVING";
+        case SystemController::DepositState::WELD_STOPPING:          return "WELD_STOPPING";
+        case SystemController::DepositState::WELD_TRIGGERING_STOP:   return "WELD_TRIGGERING_STOP";
+        default:                                                     return "?";
+    }
+}
+
+static const char* dirName(Direction d) {
+    return (d == Direction::LEFT) ? "LEFT" : "RIGHT";
+}
+
+// ─── Implementação ───────────────────────────────────────────────────────
+
 void SystemController::begin() {
-    _hmi.begin();
     _axisController.begin();
     _weldingController.begin();
+
+    Serial.println();
+    Serial.println("========================================");
+    Serial.println("  WAAM System Controller - Serial Mode");
+    Serial.println("========================================");
+    printHelp();
+    printStatus();
 }
 
 void SystemController::update(uint32_t now) {
-    _hmi.update(now);
     _axisController.update(now);
     _weldingController.update(now);
 
-    handleInputs(now);
+    handleSerialInput(now);
     handleDeposit(now);
-    if (_axisController.stateChanged() && _depositState == DepositState::IDLE) {
-        updateStatus(now);
+
+    // Log de mudanças de estado do eixo (sempre)
+    AxisController::State axisState = _axisController.getState();
+    if (axisState != _prevAxisState) {
+        Serial.print("[STATUS] Axis: ");
+        Serial.print(axisStateName(_prevAxisState));
+        Serial.print(" -> ");
+        Serial.print(axisStateName(axisState));
+        Serial.print("  |  Dir: ");
+        Serial.print(dirName(_axisController.getDirection()));
+        Serial.print("  |  Deposit: ");
+        Serial.println(depositStateName(_depositState));
+        _prevAxisState = axisState;
+    }
+
+    // Log de mudanças de estado do depósito
+    if (_depositState != _prevDepositState) {
+        Serial.print("[STATUS] Deposit: ");
+        Serial.print(depositStateName(_prevDepositState));
+        Serial.print(" -> ");
+        Serial.print(depositStateName(_depositState));
+        Serial.print("  |  Axis: ");
+        Serial.print(axisStateName(axisState));
+        Serial.print("  |  Dir: ");
+        Serial.println(dirName(_axisController.getDirection()));
+        _prevDepositState = _depositState;
     }
 }
+
+// ─── Máquina de estados do depósito ──────────────────────────────────────
 
 void SystemController::handleDeposit(uint32_t now) {
     switch (_depositState) {
@@ -36,14 +98,15 @@ void SystemController::handleDeposit(uint32_t now) {
             }
             break;
         case DepositState::MOVING:
-            if (_axisController.getState() != AxisController::State::MOVING && _axisController.getState() != AxisController::State::STARTING) {
+            if (_axisController.getState() != AxisController::State::MOVING &&
+                _axisController.getState() != AxisController::State::STARTING) {
                 LOG_SYSTEM("Deposit: axis stopped -> stopping weld");
                 _depositPhaseStart = now;
                 _depositState = DepositState::WELD_STOPPING;
             }
             break;
         case DepositState::WELD_STOPPING:
-            if (now - _depositPhaseStart >= weldStopDelayMs()){
+            if (now - _depositPhaseStart >= weldStopDelayMs()) {
                 LOG_SYSTEM("Deposit: triggering weld stop");
                 _weldingController.trigger(now);
                 _depositState = DepositState::WELD_TRIGGERING_STOP;
@@ -53,83 +116,140 @@ void SystemController::handleDeposit(uint32_t now) {
             if (!_weldingController.isPending()) {
                 LOG_SYSTEM("Deposit: complete -> IDLE");
                 _depositState = DepositState::IDLE;
-                updateStatus(now);
             }
     }
 }
 
-void SystemController::handleInputs(uint32_t now) {
-    bool isLeft = false, isRight = false, isTrigger = false;
+// ─── Comandos Seriais ────────────────────────────────────────────────────
 
-    // --- Serial HMI simulation (test hack) ---
-    if (Serial.available()) {
-        char cmd = Serial.read();
+void SystemController::handleSerialInput(uint32_t now) {
+    if (!Serial.available()) return;
 
-        if (cmd == 'S' || cmd == 's') {
-            Serial.println("[SERIAL] Enter moveStartOffsetMs and weldStopOffsetMs (ms):");
-            Serial.setTimeout(10000);
-            int32_t val1 = Serial.parseInt();
-            int32_t val2 = Serial.parseInt();
-            if (val1 >= 0 && val2 >= 0) {
-                _moveStartOffsetMs = val1;
-                _weldStopOffsetMs = val2;
-                Serial.print("[SERIAL] Updated: moveStart=");
-                Serial.print(_moveStartOffsetMs);
-                Serial.print(" weldStop=");
-                Serial.println(_weldStopOffsetMs);
+    char cmd = Serial.read();
+
+    // Ignora whitespace / newline
+    if (cmd == '\r' || cmd == '\n' || cmd == ' ') return;
+
+    switch (cmd) {
+        case 'L': case 'l': {
+            Serial.println("[CMD] LEFT");
+            if (_depositState != DepositState::IDLE) {
+                Serial.println("[CMD] IGNORED - deposit in progress");
+                return;
             }
-            while (Serial.available()) Serial.read();
-            return;
-        }
-
-        isLeft = (cmd == 'L' || cmd == 'l');
-        isRight = (cmd == 'R' || cmd == 'r');
-        isTrigger = (cmd == 'T' || cmd == 't');
-    }
-
-    if (!isLeft && !isRight && !isTrigger) {
-        isLeft = _hmi.isLeftPressed();
-        isRight = _hmi.isRightPressed();
-        isTrigger = _hmi.isTriggerPressed();
-    } else {
-        // Consume pending HMI events to prevent stale triggers
-        _hmi.isLeftPressed();
-        _hmi.isRightPressed();
-        _hmi.isTriggerPressed();
-    }
-    // --- End serial HMI ---
-
-    if (_depositState != DepositState::IDLE) {
-        return;
-    }
-    if (isTrigger) {
-        LOG_SYSTEM("Input: trigger pressed");
-        deposit(now);
-        return;
-    }
-
-    if (isLeft || isRight) {
-        if (_axisController.getState() == AxisController::State::IDLE) {
-            home(now, isLeft ? Direction::LEFT : Direction::RIGHT);
-        }
-        if (_axisController.getState() == AxisController::State::HOME) {
-            if (isLeft) {
+            if (_axisController.getState() == AxisController::State::IDLE ||
+                _axisController.getState() == AxisController::State::HOME) {
                 home(now, Direction::LEFT);
-            } else if (!isLeft) {
+            }
+            break;
+        }
+        case 'R': case 'r': {
+            Serial.println("[CMD] RIGHT");
+            if (_depositState != DepositState::IDLE) {
+                Serial.println("[CMD] IGNORED - deposit in progress");
+                return;
+            }
+            if (_axisController.getState() == AxisController::State::IDLE ||
+                _axisController.getState() == AxisController::State::HOME) {
                 home(now, Direction::RIGHT);
             }
+            break;
+        }
+        case 'T': case 't': {
+            Serial.println("[CMD] TRIGGER / START DEPOSIT");
+            if (_depositState != DepositState::IDLE) {
+                Serial.println("[CMD] IGNORED - already in deposit");
+                return;
+            }
+            deposit(now);
+            break;
+        }
+        case 'S': case 's': {
+            Serial.println("[CMD] CONFIGURE OFFSETS");
+            Serial.print("  Enter moveStartOffsetMs (current=");
+            Serial.print(_moveStartOffsetMs);
+            Serial.print("): ");
+            Serial.setTimeout(15000);
+            int32_t val1 = Serial.parseInt();
+            if (val1 < 0) { Serial.println("  ABORTED"); break; }
+            Serial.println(val1);
+
+            Serial.print("  Enter weldStopOffsetMs  (current=");
+            Serial.print(_weldStopOffsetMs);
+            Serial.print("): ");
+            int32_t val2 = Serial.parseInt();
+            if (val2 < 0) { Serial.println("  ABORTED"); break; }
+            Serial.println(val2);
+
+            _moveStartOffsetMs = (uint32_t)val1;
+            _weldStopOffsetMs  = (uint32_t)val2;
+            Serial.print("[CMD] Updated: moveStartOffsetMs=");
+            Serial.print(_moveStartOffsetMs);
+            Serial.print(" ms, weldStopOffsetMs=");
+            Serial.print(_weldStopOffsetMs);
+            Serial.println(" ms");
+
+            // Limpa buffer residual
+            while (Serial.available()) Serial.read();
+            break;
+        }
+        case 'I': case 'i': {
+            Serial.println("[CMD] STATUS");
+            printStatus();
+            break;
+        }
+        case 'H': case 'h': case '?': {
+            Serial.println("[CMD] HELP");
+            printHelp();
+            break;
+        }
+        default: {
+            Serial.print("[CMD] Unknown: '");
+            Serial.print(cmd);
+            Serial.println("' — type H for help");
+            break;
         }
     }
 }
 
-void SystemController::updateStatus(uint32_t now) {
-    if (_axisController.getState() == AxisController::State::HOME &&
-        _depositState == DepositState::IDLE) {
-        _hmi.setStatus(HMI::Status::READY);
-    } else {
-        _hmi.setStatus(HMI::Status::IDLE);
-    }
+// ─── Help / Status ───────────────────────────────────────────────────────
+
+void SystemController::printHelp() {
+    Serial.println();
+    Serial.println("Commands:");
+    Serial.println("  L/l  - Move LEFT  (home)");
+    Serial.println("  R/r  - Move RIGHT (home)");
+    Serial.println("  T/t  - Trigger deposit (start cycle)");
+    Serial.println("  S/s  - Set moveStartOffsetMs & weldStopOffsetMs");
+    Serial.println("  I/i  - Show current status");
+    Serial.println("  H/h/?- This help");
+    Serial.println();
 }
+
+void SystemController::printStatus() {
+    Serial.println();
+    Serial.println("─── System Status ───");
+    Serial.print("  Axis state:     ");
+    Serial.println(axisStateName(_axisController.getState()));
+    Serial.print("  Axis direction: ");
+    Serial.println(dirName(_axisController.getDirection()));
+    Serial.print("  Axis pending:   ");
+    Serial.println(_axisController.isPending() ? "YES" : "NO");
+    Serial.print("  Deposit state:  ");
+    Serial.println(depositStateName(_depositState));
+    Serial.print("  Weld pending:   ");
+    Serial.println(_weldingController.isPending() ? "YES" : "NO");
+    Serial.print("  moveStartOffsetMs: ");
+    Serial.print(_moveStartOffsetMs);
+    Serial.println(" ms");
+    Serial.print("  weldStopOffsetMs:  ");
+    Serial.print(_weldStopOffsetMs);
+    Serial.println(" ms");
+    Serial.println("──────────────────────");
+    Serial.println();
+}
+
+// ─── Comandos de movimento / depósito ────────────────────────────────────
 
 void SystemController::home(uint32_t now, Direction direction) {
     LOG_SYSTEM("Homing");
@@ -140,11 +260,18 @@ void SystemController::deposit(uint32_t now) {
     if (_axisController.getState() != AxisController::State::HOME ||
         _depositState != DepositState::IDLE || _axisController.isPending() ||
         _weldingController.isPending()) {
+        Serial.print("[CMD] Cannot start deposit: axis=");
+        Serial.print(axisStateName(_axisController.getState()));
+        Serial.print(" deposit=");
+        Serial.print(depositStateName(_depositState));
+        Serial.print(" axisPending=");
+        Serial.print(_axisController.isPending() ? "Y" : "N");
+        Serial.print(" weldPending=");
+        Serial.println(_weldingController.isPending() ? "Y" : "N");
         return;
     }
     LOG_SYSTEM("Deposit: started -> WELD_TRIGGERING_START");
     _weldingController.trigger(now);
     _depositPhaseStart = now;
-    _hmi.setStatus(HMI::Status::RUNNING);
     _depositState = DepositState::WELD_TRIGGERING_START;
 }
