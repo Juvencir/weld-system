@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "Config.h"
 #include "EndStop.h"
 #include "PulseOutput.h"
 #include "Types.h"
@@ -18,7 +19,8 @@
 class AxisController {
    public:
     /** Duração padrão do pulso de start/stop em milissegundos. */
-    static constexpr uint32_t PULSE_DURATION_MS = 450;
+    static constexpr uint32_t PULSE_DURATION_MS = Config::CARRIAGE_PULSE_DURATION_MS;
+
 
     /** Estados da máquina de estados do eixo. */
     enum class State {
