@@ -1,29 +1,29 @@
 #include "SerialTerminal.h"
 
-// ─── Helpers estáticos para nomear estados em logs ───────────────────────────────
+// ─── Helpers estáticos para nomear estados em logs
+// ───────────────────────────────
 
 /** Retorna a representação em texto do estado do AxisController. */
 static const char* axisStateName(AxisController::State s) {
     switch (s) {
-        case AxisController::State::IDLE:     return "IDLE";
+        case AxisController::State::IDLE: return "IDLE";
         case AxisController::State::STARTING: return "STARTING";
-        case AxisController::State::MOVING:   return "MOVING";
+        case AxisController::State::MOVING: return "MOVING";
         case AxisController::State::STOPPING: return "STOPPING";
         case AxisController::State::ABORTING: return "ABORTING";
-        case AxisController::State::HOME:     return "HOME";
-        default:                              return "?";
+        case AxisController::State::HOME: return "HOME";
+        default: return "?";
     }
 }
 
-/** Retorna a representação em texto do estado de depósito do SystemController. */
 static const char* depositStateName(SystemController::DepositState s) {
     switch (s) {
-        case SystemController::DepositState::IDLE:                   return "IDLE";
-        case SystemController::DepositState::WELD_TRIGGERING_START:  return "WELD_TRIGGERING_START";
-        case SystemController::DepositState::MOVING:                 return "MOVING";
-        case SystemController::DepositState::WELD_STOPPING:          return "WELD_STOPPING";
-        case SystemController::DepositState::WELD_TRIGGERING_STOP:   return "WELD_TRIGGERING_STOP";
-        default:                                                     return "?";
+        case SystemController::DepositState::IDLE: return "IDLE";
+        case SystemController::DepositState::TRIGGERING_START: return "TRIGGERING_START";
+        case SystemController::DepositState::MOVING: return "MOVING";
+        case SystemController::DepositState::WAITING_STOP: return "WAITING_STOP";
+        case SystemController::DepositState::TRIGGERING_STOP: return "TRIGGERING_STOP";
+        default: return "?";
     }
 }
 
@@ -85,7 +85,8 @@ void SerialTerminal::handleSerialInput(uint32_t now) {
     if (cmd == '\r' || cmd == '\n' || cmd == ' ') return;
 
     switch (cmd) {
-        case 'L': case 'l': {
+        case 'L':
+        case 'l': {
             _stream.println("[CMD] LEFT");
             if (_systemController.getDepositState() != SystemController::DepositState::IDLE) {
                 _stream.println("[CMD] IGNORED - deposit in progress");
@@ -96,7 +97,8 @@ void SerialTerminal::handleSerialInput(uint32_t now) {
             }
             break;
         }
-        case 'R': case 'r': {
+        case 'R':
+        case 'r': {
             _stream.println("[CMD] RIGHT");
             if (_systemController.getDepositState() != SystemController::DepositState::IDLE) {
                 _stream.println("[CMD] IGNORED - deposit in progress");
@@ -107,7 +109,8 @@ void SerialTerminal::handleSerialInput(uint32_t now) {
             }
             break;
         }
-        case 'T': case 't': {
+        case 'T':
+        case 't': {
             _stream.println("[CMD] TRIGGER / START DEPOSIT");
             if (_systemController.getDepositState() != SystemController::DepositState::IDLE) {
                 _stream.println("[CMD] IGNORED - already in deposit");
@@ -118,21 +121,28 @@ void SerialTerminal::handleSerialInput(uint32_t now) {
             }
             break;
         }
-        case 'S': case 's': {
+        case 'S':
+        case 's': {
             _stream.println("[CMD] CONFIGURE OFFSETS");
             _stream.print("  Enter moveStartOffsetMs (current=");
             _stream.print(_systemController.getMoveStartOffsetMs());
             _stream.print("): ");
             _stream.setTimeout(15000);
             int32_t val1 = _stream.parseInt();
-            if (val1 < 0) { _stream.println("  ABORTED"); break; }
+            if (val1 < 0) {
+                _stream.println("  ABORTED");
+                break;
+            }
             _stream.println(val1);
 
             _stream.print("  Enter weldStopOffsetMs  (current=");
             _stream.print(_systemController.getWeldStopOffsetMs());
             _stream.print("): ");
             int32_t val2 = _stream.parseInt();
-            if (val2 < 0) { _stream.println("  ABORTED"); break; }
+            if (val2 < 0) {
+                _stream.println("  ABORTED");
+                break;
+            }
             _stream.println(val2);
 
             _systemController.setOffsets((uint32_t)val1, (uint32_t)val2);
@@ -146,12 +156,15 @@ void SerialTerminal::handleSerialInput(uint32_t now) {
             while (_stream.available()) _stream.read();
             break;
         }
-        case 'I': case 'i': {
+        case 'I':
+        case 'i': {
             _stream.println("[CMD] STATUS");
             printStatus();
             break;
         }
-        case 'H': case 'h': case '?': {
+        case 'H':
+        case 'h':
+        case '?': {
             _stream.println("[CMD] HELP");
             printHelp();
             break;

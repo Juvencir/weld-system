@@ -23,7 +23,7 @@ void SystemController::update(uint32_t now) {
 
 void SystemController::setOffsets(uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs) {
     _moveStartOffsetMs = moveStartOffsetMs;
-    _weldStopOffsetMs = weldStopOffsetMs;
+    _weldStopOffsetMs  = weldStopOffsetMs;
 }
 
 bool SystemController::home(uint32_t now, Direction direction) {
@@ -45,18 +45,17 @@ bool SystemController::deposit(uint32_t now) {
         _weldingController.isPending()) {
         return false;
     }
-    LOG_SYSTEM("Deposit: started -> WELD_TRIGGERING_START");
+    LOG_SYSTEM("Deposit: started -> TRIGGERING_START");
     _weldingController.trigger(now);
     _depositPhaseStart = now;
-    _depositState = DepositState::WELD_TRIGGERING_START;
+    _depositState      = DepositState::TRIGGERING_START;
     return true;
 }
 
 void SystemController::handleDeposit(uint32_t now) {
     switch (_depositState) {
-        case DepositState::IDLE:
-            break;
-        case DepositState::WELD_TRIGGERING_START:
+        case DepositState::IDLE: break;
+        case DepositState::TRIGGERING_START:
             if (now - _depositPhaseStart >= moveStartDelayMs()) {
                 Direction dir = (_axisController.getDirection() == Direction::LEFT)
                                     ? Direction::RIGHT
@@ -72,17 +71,17 @@ void SystemController::handleDeposit(uint32_t now) {
                 _axisController.getState() != AxisController::State::STARTING) {
                 LOG_SYSTEM("Deposit: axis stopped -> stopping weld");
                 _depositPhaseStart = now;
-                _depositState = DepositState::WELD_STOPPING;
+                _depositState      = DepositState::WAITING_STOP;
             }
             break;
-        case DepositState::WELD_STOPPING:
+        case DepositState::WAITING_STOP:
             if (now - _depositPhaseStart >= weldStopDelayMs()) {
                 LOG_SYSTEM("Deposit: triggering weld stop");
                 _weldingController.trigger(now);
-                _depositState = DepositState::WELD_TRIGGERING_STOP;
+                _depositState = DepositState::TRIGGERING_STOP;
             }
             break;
-        case DepositState::WELD_TRIGGERING_STOP:
+        case DepositState::TRIGGERING_STOP:
             if (!_weldingController.isPending()) {
                 LOG_SYSTEM("Deposit: complete -> IDLE");
                 _depositState = DepositState::IDLE;

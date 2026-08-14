@@ -13,7 +13,8 @@
  *
  * Instancia os objetos controladores de hardware (sensor de fim de curso,
  * controlador de eixo e gatilho de solda), o orquestrador SystemController
- * e a interface desacoplada SerialTerminal utilizando os parâmetros de Config.h.
+ * e a interface desacoplada SerialTerminal utilizando os parâmetros de
+ * Config.h.
  */
 
 // Instanciação do sensor de fim de curso por efeito Hall
@@ -24,8 +25,7 @@ AxisController axisController(Pins::CARRIAGE_START_PIN, Pins::CARRIAGE_STOP_PIN,
                               Pins::CARRIAGE_DIR_PIN, endStop);
 
 // Saída de pulso para acionamento do gatilho da solda
-PulseOutput weldingController(Pins::WELDING_PIN, Config::WELD_PULSE_DURATION_MS,
-                              Config::WELD_PULSE_ACTIVE_STATE, Config::WELD_PIN_MODE);
+PulseOutput weldingController(Pins::WELDING_PIN, Config::WELD_PULSE_DURATION_MS, LOW, OUTPUT);
 
 // Orquestrador do sistema coordenando eixo, solda e offsets de sincronização
 SystemController systemController(axisController, weldingController,
@@ -53,4 +53,3 @@ void loop() {
     systemController.update(now);
     serialTerminal.update(now);
 }
-

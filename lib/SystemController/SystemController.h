@@ -8,13 +8,16 @@
 
 /**
  * @file SystemController.h
- * @brief Orquestrador do sistema. Coordena o movimento do eixo e a temporização da soldagem WAAM.
+ * @brief Orquestrador do sistema. Coordena o movimento do eixo e a temporização
+ * da soldagem WAAM.
  *
- * Gerencia dois modos de operação: homing simples (movimento até o fim de curso)
- * e depósito WAAM (aciona solda, aguarda offset, move eixo até o fim de curso, aguarda offset e desliga solda).
+ * Gerencia dois modos de operação: homing simples (movimento até o fim de
+ * curso) e depósito WAAM (aciona solda, aguarda offset, move eixo até o fim de
+ * curso, aguarda offset e desliga solda).
  *
- * É uma classe puramente lógica e desacoplada de interfaces de usuário (Serial, botões, etc.),
- * disponibilizando métodos públicos para acionamento e consulta de estado.
+ * É uma classe puramente lógica e desacoplada de interfaces de usuário (Serial,
+ * botões, etc.), disponibilizando métodos públicos para acionamento e consulta
+ * de estado.
  */
 
 /**
@@ -25,18 +28,20 @@ class SystemController {
    public:
     /** Estados da máquina de estados do processo de depósito WAAM. */
     enum class DepositState {
-        IDLE,                   ///< Processo inativo
-        WELD_TRIGGERING_START,  ///< Solda acionada, aguardando offset para iniciar movimento do eixo
-        MOVING,                 ///< Eixo em movimento durante o depósito
-        WELD_STOPPING,          ///< Eixo atingiu o fim de curso, aguardando offset para desligar a solda
-        WELD_TRIGGERING_STOP    ///< Pulso de desligamento da solda disparado
+        IDLE,              ///< Processo inativo
+        TRIGGERING_START,  ///< Solda acionada, aguardando offset para iniciar movimento do eixo
+        MOVING,            ///< Eixo em movimento durante o depósito
+        WAITING_STOP,      ///< Eixo atingiu o fim de curso, aguardando offset para desligar a solda
+        TRIGGERING_STOP    ///< Pulso de desligamento da solda disparado
     };
 
     /**
      * @param axisController     Referência ao controlador do eixo
      * @param weldingController  Referência ao PulseOutput da solda
-     * @param moveStartOffsetMs  Offset entre ativação da solda e ativação do movimento
-     * @param weldStopOffsetMs   Offset entre parada do eixo e desativação da solda
+     * @param moveStartOffsetMs  Offset entre ativação da solda e ativação do
+     * movimento
+     * @param weldStopOffsetMs   Offset entre parada do eixo e desativação da
+     * solda
      */
     SystemController(AxisController& axisController, PulseOutput& weldingController,
                      uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs);
@@ -47,8 +52,8 @@ class SystemController {
     void begin();
 
     /**
-     * Atualiza os subsistemas e gerencia a máquina de estados do ciclo de depósito.
-     * Deve ser chamado continuamente no loop principal.
+     * Atualiza os subsistemas e gerencia a máquina de estados do ciclo de
+     * depósito. Deve ser chamado continuamente no loop principal.
      *
      * @param now Tempo atual em milissegundos (millis())
      */
@@ -59,15 +64,18 @@ class SystemController {
      *
      * @param now       Tempo atual em milissegundos (millis())
      * @param direction Direção do movimento (LEFT ou RIGHT)
-     * @return true se a solicitação foi aceita, false se o sistema estiver ocupado
+     * @return true se a solicitação foi aceita, false se o sistema estiver
+     * ocupado
      */
     bool home(uint32_t now, Direction direction);
 
     /**
-     * Inicia o ciclo de depósito WAAM: dispara a solda e agenda a partida do eixo.
+     * Inicia o ciclo de depósito WAAM: dispara a solda e agenda a partida do
+     * eixo.
      *
      * @param now Tempo atual em milissegundos (millis())
-     * @return true se o ciclo iniciou com sucesso, false se o sistema estiver ocupado ou fora de HOME
+     * @return true se o ciclo iniciou com sucesso, false se o sistema estiver
+     * ocupado ou fora de HOME
      */
     bool deposit(uint32_t now);
 
@@ -75,7 +83,8 @@ class SystemController {
      * Atualiza os offsets de temporização do depósito.
      *
      * @param moveStartOffsetMs Offset entre ativação da solda e partida do eixo
-     * @param weldStopOffsetMs  Offset entre parada do eixo e desligamento da solda
+     * @param weldStopOffsetMs  Offset entre parada do eixo e desligamento da
+     * solda
      */
     void setOffsets(uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs);
 
@@ -137,11 +146,12 @@ class SystemController {
     void handleDeposit(uint32_t now);
 
     AxisController& _axisController;     ///< Controlador do eixo motorizado
-    PulseOutput& _weldingController;    ///< Controlador de pulso da solda
+    PulseOutput&    _weldingController;  ///< Controlador de pulso da solda
 
-    uint32_t _moveStartOffsetMs;        ///< Offset entre ativação da solda e partida do eixo
-    uint32_t _weldStopOffsetMs;         ///< Offset entre parada do eixo e desligamento da solda
+    uint32_t _moveStartOffsetMs;  ///< Offset entre ativação da solda e partida do eixo
+    uint32_t _weldStopOffsetMs;   ///< Offset entre parada do eixo e desligamento da
+                                  ///< solda
 
-    DepositState _depositState = DepositState::IDLE;  ///< Estado atual do ciclo de depósito
-    uint32_t _depositPhaseStart = 0;                  ///< Timestamp de início da fase de depósito atual
+    DepositState _depositState      = DepositState::IDLE;  ///< Estado atual do ciclo de depósito
+    uint32_t     _depositPhaseStart = 0;  ///< Timestamp de início da fase de depósito atual
 };

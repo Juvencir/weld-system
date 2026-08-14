@@ -17,8 +17,8 @@
 namespace Pins {
 // Controlador do Eixo / Carrinho (AxisController)
 constexpr uint32_t CARRIAGE_START_PIN = PB8;  ///< Pino de pulso para iniciar movimento do eixo
-constexpr uint32_t CARRIAGE_STOP_PIN = PB9;   ///< Pino de pulso para parar movimento do eixo
-constexpr uint32_t CARRIAGE_DIR_PIN = PB7;    ///< Pino de controle de direção do eixo
+constexpr uint32_t CARRIAGE_STOP_PIN  = PB9;  ///< Pino de pulso para parar movimento do eixo
+constexpr uint32_t CARRIAGE_DIR_PIN   = PB7;  ///< Pino de controle de direção do eixo
 
 // Controlador de Solda (WeldingController / PulseOutput)
 constexpr uint32_t WELDING_PIN = PA1;  ///< Pino de pulso para gatilho da fonte de solda

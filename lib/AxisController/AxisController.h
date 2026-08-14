@@ -21,7 +21,6 @@ class AxisController {
     /** Duração padrão do pulso de start/stop em milissegundos. */
     static constexpr uint32_t PULSE_DURATION_MS = Config::CARRIAGE_PULSE_DURATION_MS;
 
-
     /** Estados da máquina de estados do eixo. */
     enum class State {
         IDLE,      ///< Eixo parado e em repouso
@@ -93,18 +92,18 @@ class AxisController {
     bool isPending() const { return _start.isPending() || _stop.isPending(); }
 
    private:
-    Direction _currentDir = Direction::RIGHT;
-    State _state = State::IDLE;
-    bool _stateChanged = false;
+    Direction _currentDir   = Direction::RIGHT;
+    State     _state        = State::IDLE;
+    bool      _stateChanged = false;
 
     // Flag para ignorar o sensor de fim de curso enquanto ele desativa após partir de HOME
     bool _ignoringEndStop = false;
 
-    PulseOutput _start;  // Gerador de pulso para partida do eixo
-    PulseOutput _stop;   // Gerador de pulso para parada do eixo
-    uint32_t _dirPin;    // Pino de direção (LOW = LEFT, HIGH = RIGHT)
+    PulseOutput _start;   // Gerador de pulso para partida do eixo
+    PulseOutput _stop;    // Gerador de pulso para parada do eixo
+    uint32_t    _dirPin;  // Pino de direção (LOW = LEFT, HIGH = RIGHT)
 
-    EndStop& _endStop;   // Referência ao sensor de fim de curso
+    EndStop& _endStop;  // Referência ao sensor de fim de curso
 
     /**
      * Atualiza o estado interno do eixo e sinaliza a alteração caso o novo estado seja diferente.
@@ -113,4 +112,3 @@ class AxisController {
      */
     void setState(State newState);
 };
-

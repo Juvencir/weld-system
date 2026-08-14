@@ -15,9 +15,9 @@
 #ifdef LOG_ENABLED
 
 #define LOG_MODULE_SYSTEM 1
-#define LOG_MODULE_AXIS 1
-#define LOG_MODULE_HMI 1
-#define LOG_MODULE_WELD 1
+#define LOG_MODULE_AXIS   1
+#define LOG_MODULE_HMI    1
+#define LOG_MODULE_WELD   1
 #define LOG_MODULE_BUTTON 0  // muito verboso, desabilitado por padrão
 
 #if LOG_MODULE_SYSTEM

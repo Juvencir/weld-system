@@ -11,6 +11,10 @@ void EndStop::begin() {
     _state = !digitalRead(_pin);
 }
 
-void EndStop::isrHandler() { _instance->isrChange(); }
+void EndStop::isrHandler() {
+    _instance->isrChange();
+}
 
-void EndStop::isrChange() { _state = !digitalRead(_pin); }
+void EndStop::isrChange() {
+    _state = !digitalRead(_pin);
+}

@@ -13,7 +13,7 @@ bool AxisController::stateChanged() {
 void AxisController::setState(State newState) {
     if (newState != _state) {
         LOG_AXIS("state changed");
-        _state = newState;
+        _state        = newState;
         _stateChanged = true;
     }
 }

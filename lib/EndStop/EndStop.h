@@ -38,8 +38,8 @@ class EndStop {
     bool getState() const { return _state; };
 
    private:
-    const uint32_t _pin;           ///< Pino GPIO do sensor
-    volatile bool _state = false;  ///< Estado do sensor (true = acionado)
+    const uint32_t _pin;            ///< Pino GPIO do sensor
+    volatile bool  _state = false;  ///< Estado do sensor (true = acionado)
 
     /** ISR não-estática executada pela instância ao detectar alteração no pino. */
     void isrChange();

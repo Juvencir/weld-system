@@ -53,9 +53,9 @@ class PulseOutput {
    private:
     const uint32_t _pin;
     const uint32_t _durationMs;
-    const uint8_t _activeState;
+    const uint8_t  _activeState;
     const uint32_t _mode;
 
     uint32_t _startTime = 0;
-    bool _isPending = false;
+    bool     _isPending = false;
 };

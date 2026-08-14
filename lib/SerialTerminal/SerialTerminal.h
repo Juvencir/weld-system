@@ -52,8 +52,11 @@ class SerialTerminal {
     void handleSerialInput(uint32_t now);
 
     SystemController& _systemController;  ///< Referência ao orquestrador do sistema
-    Stream& _stream;                      ///< Referência ao fluxo de comunicação serial
+    Stream&           _stream;            ///< Referência ao fluxo de comunicação serial
 
-    AxisController::State _prevAxisState = AxisController::State::IDLE;                   ///< Estado anterior do eixo para log
-    SystemController::DepositState _prevDepositState = SystemController::DepositState::IDLE; ///< Estado anterior do depósito para log
+    AxisController::State _prevAxisState =
+        AxisController::State::IDLE;  ///< Estado anterior do eixo para log
+
+    SystemController::DepositState _prevDepositState =
+        SystemController::DepositState::IDLE;  ///< Estado anterior do depósito para log
 };
