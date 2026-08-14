@@ -19,6 +19,9 @@
  */
 class EndStop {
    public:
+    /**
+     * @param pin Pino GPIO onde o sensor de fim de curso está conectado
+     */
     EndStop(uint32_t pin) : _pin(pin) {};
 
     /**
@@ -35,12 +38,15 @@ class EndStop {
     bool getState() const { return _state; };
 
    private:
-    const uint32_t _pin;
-    volatile bool _state = false;
+    const uint32_t _pin;           ///< Pino GPIO do sensor
+    volatile bool _state = false;  ///< Estado do sensor (true = acionado)
 
+    /** ISR não-estática executada pela instância ao detectar alteração no pino. */
     void isrChange();
 
-    // Ponteiro estático para redirecionar a ISR C-style ao método da instância
+    /** Ponteiro estático para redirecionar a ISR C-style ao método da instância. */
     inline static EndStop* _instance = nullptr;
+
+    /** Handler estático da ISR registrado no attachInterrupt. */
     static void isrHandler();
 };

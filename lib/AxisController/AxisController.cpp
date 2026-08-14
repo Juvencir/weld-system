@@ -38,14 +38,17 @@ void AxisController::update(uint32_t now) {
     _start.update(now);
     _stop.update(now);
 
+    // Se houver pulso ativo (start ou stop), aguarda a conclusão antes de transicionar de estado
     if (isPending()) {
         return;
     }
 
+    // Ao se afastar do fim de curso, reseta a flag assim que o sensor for liberado
     if (_ignoringEndStop && !_endStop.getState()) {
         _ignoringEndStop = false;
     }
 
+    // Transições de estado pós-conclusão dos pulsos
     if (_state == State::STARTING) {
         setState(State::MOVING);
     } else if (_state == State::STOPPING) {
@@ -53,6 +56,7 @@ void AxisController::update(uint32_t now) {
     } else if (_state == State::ABORTING) {
         setState(State::IDLE);
     } else if (_state == State::MOVING) {
+        // Monitora ativamente o fim de curso durante o movimento
         if (_endStop.getState() && !_ignoringEndStop) {
             LOG_AXIS("end stop triggered -> STOPPING");
             _stop.trigger(now);
@@ -62,14 +66,17 @@ void AxisController::update(uint32_t now) {
 }
 
 void AxisController::move(uint32_t now, Direction direction) {
+    // Permite movimento apenas se o eixo estiver em repouso (IDLE ou HOME) e sem pulsos pendentes
     if ((_state != State::IDLE && _state != State::HOME) || isPending()) {
         return;
     }
 
+    // Impede movimento na mesma direção se já estiver parado no fim de curso acionado
     if (direction == _currentDir && (_state == State::HOME || _endStop.getState())) {
         return;
     }
 
+    // Se partir de cima do fim de curso, ignora leituras até que o sensor seja liberado
     if (_endStop.getState()) {
         _ignoringEndStop = true;
     }
@@ -83,6 +90,7 @@ void AxisController::move(uint32_t now, Direction direction) {
 }
 
 void AxisController::abort(uint32_t now) {
+    // Permite abortar somente se o eixo estiver em movimento ativo e sem pulso pendente
     if (_state != State::MOVING || isPending()) {
         return;
     }
