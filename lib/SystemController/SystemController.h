@@ -3,26 +3,34 @@
 #include <cstdint>
 
 #include "AxisController.h"
+#include "PulseOutput.h"
 #include "Types.h"
 
 /**
- * @brief Orquestrador do sistema. Coordena comandos seriais, movimento e soldagem.
+ * @file SystemController.h
+ * @brief Orquestrador do sistema. Coordena o movimento do eixo e a temporização da soldagem WAAM.
  *
- * Gerencia dois modos de operação: homing simples (vai ao fim de curso e para)
- * e depósito WAAM (aciona solda, move ao fim de curso, desliga solda).
+ * Gerencia dois modos de operação: homing simples (movimento até o fim de curso)
+ * e depósito WAAM (aciona solda, aguarda offset, move eixo até o fim de curso, aguarda offset e desliga solda).
  *
- * Controle feito via Serial:
- *   L/l → mover/esquerda   R/r → mover/direita   T/t → trigger/iniciar
- *   S/s → configurar offsets (moveStartOffsetMs, weldStopOffsetMs)
- *   I/i → exibir status atual   H/h/? → ajuda
- *
- * Os tempos de agendamento são calculados a partir de offsets relativos
- * passados no construtor, compensando automaticamente as durações dos pulsos
- * de solda e do eixo — já que ambos ativam/deativam ao retornar ao repouso.
+ * É uma classe puramente lógica e desacoplada de interfaces de usuário (Serial, botões, etc.),
+ * disponibilizando métodos públicos para acionamento e consulta de estado.
+ */
+
+/**
+ * @class SystemController
+ * @brief Controlador central e orquestrador do processo de depósito.
  */
 class SystemController {
    public:
-    enum class DepositState { IDLE, WELD_TRIGGERING_START, MOVING, WELD_STOPPING, WELD_TRIGGERING_STOP };
+    /** Estados da máquina de estados do processo de depósito WAAM. */
+    enum class DepositState {
+        IDLE,                   ///< Processo inativo
+        WELD_TRIGGERING_START,  ///< Solda acionada, aguardando offset para iniciar movimento do eixo
+        MOVING,                 ///< Eixo em movimento durante o depósito
+        WELD_STOPPING,          ///< Eixo atingiu o fim de curso, aguardando offset para desligar a solda
+        WELD_TRIGGERING_STOP    ///< Pulso de desligamento da solda disparado
+    };
 
     /**
      * @param axisController     Referência ao controlador do eixo
@@ -31,37 +39,66 @@ class SystemController {
      * @param weldStopOffsetMs   Offset entre parada do eixo e desativação da solda
      */
     SystemController(AxisController& axisController, PulseOutput& weldingController,
-                     uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs)
-        : _axisController(axisController),
-          _weldingController(weldingController),
-          _moveStartOffsetMs(moveStartOffsetMs),
-          _weldStopOffsetMs(weldStopOffsetMs) {};
+                     uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs);
 
+    /**
+     * Inicializa os subsistemas de eixo e solda.
+     */
     void begin();
+
+    /**
+     * Atualiza os subsistemas e gerencia a máquina de estados do ciclo de depósito.
+     * Deve ser chamado continuamente no loop principal.
+     *
+     * @param now Tempo atual em milissegundos (millis())
+     */
     void update(uint32_t now);
 
-   private:
-    /** Move o eixo em uma direção até o fim de curso (homing simples). */
-    void home(uint32_t now, Direction direction);
+    /**
+     * Move o eixo em uma direção até o fim de curso (homing simples).
+     *
+     * @param now       Tempo atual em milissegundos (millis())
+     * @param direction Direção do movimento (LEFT ou RIGHT)
+     * @return true se a solicitação foi aceita, false se o sistema estiver ocupado
+     */
+    bool home(uint32_t now, Direction direction);
 
-    /** Inicia ciclo de depósito: aciona solda e agenda movimento. */
-    void deposit(uint32_t now);
+    /**
+     * Inicia o ciclo de depósito WAAM: dispara a solda e agenda a partida do eixo.
+     *
+     * @param now Tempo atual em milissegundos (millis())
+     * @return true se o ciclo iniciou com sucesso, false se o sistema estiver ocupado ou fora de HOME
+     */
+    bool deposit(uint32_t now);
 
-    /** Aborta o depósito em andamento e retorna o eixo ao IDLE. */
-    // void abortDeposit(uint32_t now);
+    /**
+     * Atualiza os offsets de temporização do depósito.
+     *
+     * @param moveStartOffsetMs Offset entre ativação da solda e partida do eixo
+     * @param weldStopOffsetMs  Offset entre parada do eixo e desligamento da solda
+     */
+    void setOffsets(uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs);
 
-    void handleSerialInput(uint32_t now);
-    void handleDeposit(uint32_t now);
-    void printHelp();
-    void printStatus();
+    /** @return Estado atual do ciclo de depósito */
+    DepositState getDepositState() const { return _depositState; }
 
-    AxisController& _axisController;
-    PulseOutput& _weldingController;
+    /** @return Offset de início do movimento em milissegundos */
+    uint32_t getMoveStartOffsetMs() const { return _moveStartOffsetMs; }
 
-    // Offset relativo entre ativação da solda e ativação do movimento
-    uint32_t _moveStartOffsetMs;
-    // Offset entre HOME do eixo e desativação da solda
-    uint32_t _weldStopOffsetMs;
+    /** @return Offset de parada da solda em milissegundos */
+    uint32_t getWeldStopOffsetMs() const { return _weldStopOffsetMs; }
+
+    /** @return Referência constante ao controlador do eixo */
+    const AxisController& getAxisController() const { return _axisController; }
+
+    /** @return Referência ao controlador do eixo */
+    AxisController& getAxisController() { return _axisController; }
+
+    /** @return Referência constante ao controlador da solda */
+    const PulseOutput& getWeldingController() const { return _weldingController; }
+
+    /** @return Referência ao controlador da solda */
+    PulseOutput& getWeldingController() { return _weldingController; }
 
     /**
      * Calcula o tempo absoluto de agendamento do move() a partir do offset.
@@ -91,12 +128,20 @@ class SystemController {
         return (sum >= _weldingController.durationMs()) ? sum - _weldingController.durationMs() : 0;
     }
 
-    DepositState _depositState = DepositState::IDLE;
-    uint32_t _depositPhaseStart;
+   private:
+    /**
+     * Gerencia as transições temporizadas do ciclo de depósito.
+     *
+     * @param now Tempo atual em milissegundos (millis())
+     */
+    void handleDeposit(uint32_t now);
 
-    // Estado anterior para logging de mudanças
-    AxisController::State _prevAxisState = AxisController::State::IDLE;
-    DepositState _prevDepositState = DepositState::IDLE;
+    AxisController& _axisController;     ///< Controlador do eixo motorizado
+    PulseOutput& _weldingController;    ///< Controlador de pulso da solda
 
-    bool _abortWeldPending = false;
+    uint32_t _moveStartOffsetMs;        ///< Offset entre ativação da solda e partida do eixo
+    uint32_t _weldStopOffsetMs;         ///< Offset entre parada do eixo e desligamento da solda
+
+    DepositState _depositState = DepositState::IDLE;  ///< Estado atual do ciclo de depósito
+    uint32_t _depositPhaseStart = 0;                  ///< Timestamp de início da fase de depósito atual
 };
