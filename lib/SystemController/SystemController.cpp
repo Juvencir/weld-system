@@ -3,7 +3,7 @@
 #include "Log.h"
 
 SystemController::SystemController(AxisController& axisController, PulseOutput& weldingController,
-                                   uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs)
+                                   uint32_t moveStartOffsetMs, int32_t weldStopOffsetMs)
     : _axisController(axisController),
       _weldingController(weldingController),
       _moveStartOffsetMs(moveStartOffsetMs),
@@ -21,7 +21,7 @@ void SystemController::update(uint32_t now) {
     handleDeposit(now);
 }
 
-void SystemController::setOffsets(uint32_t moveStartOffsetMs, uint32_t weldStopOffsetMs) {
+void SystemController::setOffsets(uint32_t moveStartOffsetMs, int32_t weldStopOffsetMs) {
     _moveStartOffsetMs = moveStartOffsetMs;
     _weldStopOffsetMs  = weldStopOffsetMs;
 }
@@ -49,6 +49,14 @@ bool SystemController::deposit(uint32_t now) {
     _weldingController.trigger(now);
     _depositPhaseStart = now;
     _depositState      = DepositState::TRIGGERING_START;
+    if (moveStartDelayMs() == 0) {
+        Direction dir = (_axisController.getDirection() == Direction::LEFT)
+                            ? Direction::RIGHT
+                            : Direction::LEFT;
+        LOG_SYSTEM("Deposit: weld started -> moving axis");
+        _axisController.move(now, dir);
+        _depositState = DepositState::MOVING;
+    }
     return true;
 }
 
@@ -72,6 +80,11 @@ void SystemController::handleDeposit(uint32_t now) {
                 LOG_SYSTEM("Deposit: axis stopped -> stopping weld");
                 _depositPhaseStart = now;
                 _depositState      = DepositState::WAITING_STOP;
+                if (weldStopDelayMs() == 0) {
+                    LOG_SYSTEM("Deposit: triggering weld stop");
+                    _weldingController.trigger(now);
+                    _depositState = DepositState::TRIGGERING_STOP;
+                }
             }
             break;
         case DepositState::WAITING_STOP:

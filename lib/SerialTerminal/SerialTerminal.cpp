@@ -124,33 +124,50 @@ void SerialTerminal::handleSerialInput(uint32_t now) {
         case 'S':
         case 's': {
             _stream.println("[CMD] CONFIGURE OFFSETS");
+            _stream.print("  [Info] Pulse Durations -> Carriage: ");
+            _stream.print(_systemController.getCarriagePulseDurationMs());
+            _stream.print(" ms | Weld: ");
+            _stream.print(_systemController.getWeldPulseDurationMs());
+            _stream.println(" ms");
+
             _stream.print("  Enter moveStartOffsetMs (current=");
             _stream.print(_systemController.getMoveStartOffsetMs());
-            _stream.print("): ");
+            _stream.print(" ms, min=");
+            _stream.print(_systemController.getMinMoveStartOffsetMs());
+            _stream.print(" ms): ");
             _stream.setTimeout(15000);
             int32_t val1 = _stream.parseInt();
-            if (val1 < 0) {
-                _stream.println("  ABORTED");
-                break;
-            }
             _stream.println(val1);
+            if (val1 < _systemController.getMinMoveStartOffsetMs()) {
+                _stream.print("  [Notice] moveStartOffsetMs clamped to min: ");
+                _stream.print(_systemController.getMinMoveStartOffsetMs());
+                _stream.println(" ms");
+                val1 = _systemController.getMinMoveStartOffsetMs();
+            }
 
             _stream.print("  Enter weldStopOffsetMs  (current=");
             _stream.print(_systemController.getWeldStopOffsetMs());
-            _stream.print("): ");
+            _stream.print(" ms, immediate at endstop: ");
+            _stream.print(_systemController.getImmediateWeldStopOffsetMs());
+            _stream.print(" ms, sync: 0 ms): ");
             int32_t val2 = _stream.parseInt();
-            if (val2 < 0) {
-                _stream.println("  ABORTED");
-                break;
-            }
             _stream.println(val2);
 
-            _systemController.setOffsets((uint32_t)val1, (uint32_t)val2);
-            _stream.print("[CMD] Updated: moveStartOffsetMs=");
+            _systemController.setOffsets(val1, val2);
+            _stream.println("[CMD] Offsets Updated:");
+            _stream.print("  -> moveStartOffsetMs: ");
             _stream.print(_systemController.getMoveStartOffsetMs());
-            _stream.print(" ms, weldStopOffsetMs=");
+            _stream.print(" ms (arc dwells for ");
+            _stream.print(_systemController.getMoveStartOffsetMs());
+            _stream.print(" ms; axis trigger after ");
+            _stream.print(_systemController.moveStartDelayMs());
+            _stream.println(" ms)");
+
+            _stream.print("  -> weldStopOffsetMs:  ");
             _stream.print(_systemController.getWeldStopOffsetMs());
-            _stream.println(" ms");
+            _stream.print(" ms (weld stop trigger after ");
+            _stream.print(_systemController.weldStopDelayMs());
+            _stream.println(" ms from endstop sensor)");
 
             // Limpa buffer residual
             while (_stream.available()) _stream.read();
@@ -193,22 +210,37 @@ void SerialTerminal::printHelp() {
 void SerialTerminal::printStatus() {
     _stream.println();
     _stream.println("─── System Status ───");
-    _stream.print("  Axis state:     ");
+    _stream.print("  Axis state:        ");
     _stream.println(axisStateName(_systemController.getAxisController().getState()));
-    _stream.print("  Axis direction: ");
+    _stream.print("  Axis direction:    ");
     _stream.println(dirName(_systemController.getAxisController().getDirection()));
-    _stream.print("  Axis pending:   ");
+    _stream.print("  Axis pending:      ");
     _stream.println(_systemController.getAxisController().isPending() ? "YES" : "NO");
-    _stream.print("  Deposit state:  ");
+    _stream.print("  Deposit state:     ");
     _stream.println(depositStateName(_systemController.getDepositState()));
-    _stream.print("  Weld pending:   ");
+    _stream.print("  Weld pending:      ");
     _stream.println(_systemController.getWeldingController().isPending() ? "YES" : "NO");
+    _stream.print("  Pulse durations:   Carriage=");
+    _stream.print(_systemController.getCarriagePulseDurationMs());
+    _stream.print(" ms, Weld=");
+    _stream.print(_systemController.getWeldPulseDurationMs());
+    _stream.println(" ms");
     _stream.print("  moveStartOffsetMs: ");
     _stream.print(_systemController.getMoveStartOffsetMs());
-    _stream.println(" ms");
+    _stream.print(" ms  [Arc dwell: ");
+    _stream.print(_systemController.getMoveStartOffsetMs());
+    _stream.print(" ms | Trigger delay: ");
+    _stream.print(_systemController.moveStartDelayMs());
+    _stream.print(" ms | Min: ");
+    _stream.print(_systemController.getMinMoveStartOffsetMs());
+    _stream.println(" ms]");
     _stream.print("  weldStopOffsetMs:  ");
     _stream.print(_systemController.getWeldStopOffsetMs());
-    _stream.println(" ms");
+    _stream.print(" ms  [Effective delay: ");
+    _stream.print(_systemController.weldStopDelayMs());
+    _stream.print(" ms | Immediate: ");
+    _stream.print(_systemController.getImmediateWeldStopOffsetMs());
+    _stream.println(" ms]");
     _stream.println("──────────────────────");
     _stream.println();
 }
